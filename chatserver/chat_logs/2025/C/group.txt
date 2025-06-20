@@ -1,0 +1,2 @@
+John Doe: Hello group chat
+Admin: Hello group
