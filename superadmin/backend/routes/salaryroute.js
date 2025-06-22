@@ -4,7 +4,8 @@ const Admin = require('../models/Admin');
 require('dotenv').config();
 const axios = require('axios');
 const router = express.Router();
-
+const generateReceiptPDF = require('../utils/generateReceipt');
+const sendReceiptEmail = require('../utils/sendEmail');
 // Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -52,26 +53,37 @@ router.post('/:id/pay', async (req, res) => {
 });
 
 // OPTIONAL: POST /api/salary/admins/:id/verify - verify payment after frontend checkout
+
 router.post('/:id/verify', async (req, res) => {
   const { paymentId, orderId, signature } = req.body;
 
   try {
-    const admin = await Admin.findById(req.params.id);
+    const admin = await Admin.findById(req.params.id).populate('user');
+
     if (!admin || admin.lastOrderId !== orderId) {
       return res.status(400).json({ error: 'Invalid order reference' });
     }
 
-    // OPTIONAL: you can use crypto to verify signature here if needed
-
-    // Mark as paid
     admin.paidForMonth = new Date().getMonth();
     admin.lastPaymentId = paymentId;
     await admin.save();
-    res.json({ message: 'Payment verified and marked as paid' });
+
+    // ✅ Generate PDF and send email
+    const filePath = await generateReceiptPDF(admin.user.name, admin.salary * 100, admin._id.toString(), paymentId);
+    await sendReceiptEmail(
+      admin.user.email,
+      'Cybernaut LMS Salary Receipt',
+      `<p>Hi ${admin.user.name},<br>Your salary has been credited. Please find your receipt attached.</p>`,
+      filePath
+    );
+
+    res.json({ message: 'Payment verified, receipt sent' });
   } catch (err) {
+    console.error('Verification failed:', err);
     res.status(500).json({ error: 'Verification failed' });
   }
 });
+
 
 router.post("/:adminId/invoice", async (req, res) => {
   const { adminName, email, amount } = req.body;
@@ -119,6 +131,38 @@ router.get("/invoice/:invoiceId", async (req, res) => {
   } catch (err) {
     console.error("Error fetching invoice:", err);
     res.status(500).json({ message: "Failed to fetch invoice" });
+  }
+});
+
+router.get('/stats/payments', async (req, res) => {
+  try {
+    const payments = await razorpay.payments.all({ count: 100 });
+    const currmonth = new Date().getMonth();
+    const admin = await Admin.find({paidForMonth:{$lt:currmonth}});
+    const success = payments.items.filter(p => p.status === 'captured').length;
+    const failed = payments.items.filter(p => p.status === 'failed').length;
+    const pending =admin.length;
+    const totalAmount = payments.items.reduce((sum, p) => sum + (p.status === 'captured' ? p.amount : 0), 0);
+
+    res.json({
+      totalRevenue: totalAmount / 100,
+      successfulPayments: success,
+      failedPayments: failed,
+      pendingPayments: pending
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch payment stats' });
+  }
+});
+
+router.get('/recent-transactions', async (req, res) => {
+  const count = parseInt(req.query.count) || 5;
+  try {
+    const transactions = await razorpay.payments.all({ count });
+    res.json(transactions);
+  } catch (err) {
+    console.error("Error fetching transactions:", err);
+    res.status(500).json({ error: "Failed to fetch recent transactions" });
   }
 });
 

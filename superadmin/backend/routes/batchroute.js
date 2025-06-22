@@ -46,4 +46,30 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Count existing batches by course & month & year (for generating batchName)
+router.get("/count", async (req, res) => {
+  try {
+    const { courseId, month, year } = req.query;
+
+    if (!courseId || !month || !year) {
+      return res.status(400).json({ message: "Missing courseId, month or year" });
+    }
+
+    const start = new Date(`${year}-${month}-01`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    const count = await Batch.countDocuments({
+      course: courseId,
+      startDate: { $gte: start, $lt: end },
+    });
+
+    res.json({ count });
+  } catch (err) {
+    console.error("Error counting batches:", err);
+    res.status(500).json({ error: "Failed to count batches" });
+  }
+});
+
+
 module.exports = router;

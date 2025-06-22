@@ -17,9 +17,14 @@
     "diskusage": "^1.2.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "fs": "^0.0.1-security",
     "json2csv": "^6.0.0-alpha.2",
+    "moment": "^2.30.1",
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
+    "nodemailer": "^7.0.3",
+    "path": "^0.12.7",
+    "puppeteer": "^24.10.2",
     "razorpay": "^2.9.6",
     "xlsx": "^0.18.5"
   }

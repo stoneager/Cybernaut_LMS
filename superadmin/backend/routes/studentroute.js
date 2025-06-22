@@ -4,11 +4,19 @@ const User = require("../models/User");
 const Student = require('../models/Student');
 const Batch = require('../models/Batch');
 const { Parser } = require('json2csv');
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
-// Save selected students & generate credentials
-router.post('/save-selected', async (req, res) => {
+const transporter = nodemailer.createTransport({
+  service: "gmail", // or use "hotmail", or configure custom SMTP
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+router.post("/save-selected", async (req, res) => {
   const selectedStudents = req.body;
   const credentials = [];
 
@@ -19,13 +27,13 @@ router.post('/save-selected', async (req, res) => {
 
       const plainPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
       const newUser = await User.create({
         name: stu.name,
         email: stu.email,
         password: hashedPassword,
-        role: 'student',
+        role: "student",
       });
+      const new_dob = new Date(stu.dob);
 
       await Student.create({
         user: newUser._id,
@@ -33,7 +41,7 @@ router.post('/save-selected', async (req, res) => {
         batch: stu.batch,
         phone: stu.phone,
         address: stu.address,
-        dob: stu.dob,
+        dob: new_dob,
       });
 
       credentials.push({
@@ -41,11 +49,28 @@ router.post('/save-selected', async (req, res) => {
         email: stu.email,
         password: plainPassword,
       });
+
+      // Send Email
+      await transporter.sendMail({
+        from: `"Cybernaut Admin" <${process.env.EMAIL_USER}>`,
+        to: stu.email,
+        subject: "Welcome to Cybernaut LMS - Your Account Credentials",
+        html: `
+          <h3>Hello ${stu.name},</h3>
+          <p>Your account has been created on <strong>Cybernaut LMS</strong>.</p>
+          <p><strong>Username:</strong> ${stu.email}</p>
+          <p><strong>Password:</strong> ${plainPassword}</p>
+          <p>You can log in at <a href="http://your-lms-domain.com/login">Cybernaut LMS</a></p>
+          <br/>
+          <p>Regards,<br/>Cybernaut Team</p>
+        `,
+      });
     }
 
     res.json({ credentials });
   } catch (err) {
-    res.status(500).json({ error: 'Error saving students' });
+    console.error("Error saving students:", err);
+    res.status(500).json({ error: "Error saving students" });
   }
 });
 
@@ -80,7 +105,7 @@ router.get('/', async (req, res) => {
 
     const formattedStudents = students.map(student => ({
       _id: student._id,
-      user: student.user, // { name, email }
+      user: student.user,
       phone: student.phone,
       dob: student.dob,
       batch: student.batch.batchName,

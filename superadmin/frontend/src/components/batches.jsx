@@ -7,7 +7,7 @@ const Batches = () => {
   const [batches, setBatches] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showModal2, setShowModal2] = useState({ show: false, course: null, batchId: null });
-  const [form, setForm] = useState({ batchName: "", course: "", startDate: "", admins: [] });
+  const [form, setForm] = useState({ course: "", startDate: "", admins: [] });
   const [courses, setCourses] = useState([]);
   const [staff, setStaff] = useState([]);
   const [modules, setModules] = useState([]);
@@ -20,16 +20,16 @@ const Batches = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [generatedBatchName, setGeneratedBatchName] = useState("");
 
   useEffect(() => {
     fetchBatches();
-    axios.get("http://localhost:5000/api/courses").then(res => setCourses(res.data));
-    axios.get("http://localhost:5000/api/users?role=admin").then(res => setStaff(res.data));
+    axios.get("http://localhost:5001/api/courses").then(res => setCourses(res.data));
+    axios.get("http://localhost:5001/api/users?role=admin").then(res => setStaff(res.data));
   }, []);
 
   const fetchBatches = () => {
-    axios.get("http://localhost:5000/api/batches")
+    axios.get("http://localhost:5001/api/batches")
       .then(res => {
         setBatches(res.data);
         const courses = [
@@ -40,19 +40,57 @@ const Batches = () => {
       .catch(err => console.error("Error fetching batches:", err));
   };
 
-  const handleCourseChange = (id) => {
+  const generateBatchName = async (courseId, startDate) => {
+    if (!courseId || !startDate) return;
+
+    const course = courses.find(c => c._id === courseId);
+    const [year, month] = startDate.split("-");
+    const shortMonth = new Date(startDate).toLocaleString("default", { month: "short" }).toUpperCase();
+    const shortYear = year.slice(-2);
+    const prefix = course.courseName
+      .split(" ")
+      .slice(0, 2)
+      .map(w => w[0].toUpperCase())
+      .join("");
+
+    try {
+      const res = await axios.get(`http://localhost:5001/api/batches/count?courseId=${courseId}&month=${month}&year=${year}`);
+      const count = res.data.count;
+      const name = `${prefix}-${shortMonth}${shortYear}-B${count + 1}`;
+      setGeneratedBatchName(name);
+      return name;
+    } catch (err) {
+      console.error("Error generating batch name", err);
+      return "";
+    }
+  };
+
+  const handleCourseChange = async (id) => {
     const course = courses.find(c => c._id === id);
-    setForm(f => ({ ...f, course: id, admins: [], batchName: "" }));
+    setForm(f => ({ ...f, course: id, admins: [] }));
     setModules(course.modules || []);
+    if (form.startDate) {
+      await generateBatchName(id, form.startDate);
+    }
+  };
+
+  const handleStartDateChange = async (date) => {
+    setForm(f => ({ ...f, startDate: date }));
+    if (form.course) {
+      await generateBatchName(form.course, date);
+    }
   };
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/batches", form);
+      const finalBatchName = await generateBatchName(form.course, form.startDate);
+      const payload = { ...form, batchName: finalBatchName };
+      const res = await axios.post("http://localhost:5001/api/batches", payload);
       toast.success("✅ Batch created successfully!");
       fetchBatches();
-      setForm({ batchName: "", course: "", startDate: "", admins: [] });
+      setForm({ course: "", startDate: "", admins: [] });
       setModules([]);
+      setGeneratedBatchName("");
       setShowModal(false);
     } catch (err) {
       toast.error("❌ Failed to create batch. Please try again.");
@@ -65,7 +103,7 @@ const Batches = () => {
     formData.append("file", file);
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/upload/upload", formData);
+      const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
       setStudents(res.data.students);
     } catch (err) {
       alert("Error uploading file");
@@ -89,7 +127,7 @@ const Batches = () => {
 
     setSaving(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/students/save-selected", selectedList);
+      const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
       setCredentials(res.data.credentials);
       alert("Students added successfully");
     } catch (err) {
@@ -102,7 +140,7 @@ const Batches = () => {
   const handleDownloadCSV = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/students/download-credentials",
+        "http://localhost:5001/api/students/download-credentials",
         credentials,
         { responseType: "blob" }
       );
@@ -118,17 +156,15 @@ const Batches = () => {
   };
 
   const filteredBatches = batches.filter(
-  b =>
-    (selectedCourse === "All" || b.course?.courseName === selectedCourse) &&
-    b.batchName.toLowerCase().includes(searchQuery.toLowerCase())
-);
-
+    b =>
+      (selectedCourse === "All" || b.course?.courseName === selectedCourse) &&
+      b.batchName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="p-6 text-blue-900 space-y-6">
       <h1 className="text-2xl font-bold mb-4">Batch Management</h1>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="p-4 bg-white border shadow rounded-lg">
           <h2 className="text-lg font-semibold text-gray-600">Total Batches</h2>
@@ -140,7 +176,6 @@ const Batches = () => {
         </div>
       </div>
 
-      {/* Filter + Add */}
       <div className="flex justify-between items-center mt-8">
         <input type="text"
           placeholder="Search batches..."
@@ -167,7 +202,6 @@ const Batches = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="mt-6 border rounded-lg overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-gray-100 text-sm text-gray-700">
@@ -221,13 +255,9 @@ const Batches = () => {
             </button>
             <h2 className="text-xl font-bold mb-4">Create Batch</h2>
 
-            <input
-              type="text"
-              placeholder="Batch Name"
-              value={form.batchName}
-              onChange={e => setForm(f => ({ ...f, batchName: e.target.value }))}
-              className="border p-2 mb-4 w-full rounded"
-            />
+            <div className="mb-4 p-2 bg-gray-100 rounded text-gray-800">
+              <strong>Batch Name: </strong> {generatedBatchName || "Select course and date"}
+            </div>
 
             <select
               onChange={e => handleCourseChange(e.target.value)}
@@ -241,7 +271,7 @@ const Batches = () => {
             <input
               type="date"
               value={form.startDate}
-              onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
+              onChange={e => handleStartDateChange(e.target.value)}
               className="border p-2 mb-4 w-full rounded"
             />
 
@@ -272,83 +302,96 @@ const Batches = () => {
         </div>
       )}
 
-      {/* Add Students Modal */}
-      {showModal2.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-5xl w-full shadow-xl overflow-y-auto max-h-[90vh] relative">
-            <button
-              className="absolute top-4 right-6 text-gray-500 text-2xl hover:text-red-600 font-bold"
-              onClick={() => setShowModal2({ show: false, course: null, batchId: null })}>&times;
-            </button>
+      
+{showModal2.show && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-lg max-w-5xl w-full shadow-xl overflow-y-auto max-h-[90vh] relative">
+      <button
+        className="absolute top-4 right-6 text-gray-500 text-2xl hover:text-red-600 font-bold"
+        onClick={() => setShowModal2({ show: false, course: null, batchId: null })}
+      >
+        &times;
+      </button>
 
-            <h2 className="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">
-              <FaUserPlus /> Upload & Assign Students
-            </h2>
+      <h2 className="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">
+        <FaUserPlus /> Upload & Assign Students
+      </h2>
 
-            <div className="flex justify-center mb-10">
-              <label
-                htmlFor="file-upload"
-                className="flex items-center gap-3 px-6 py-3 text-white font-medium bg-blue-600 rounded-lg shadow hover:bg-blue-700 cursor-pointer"
-              >
-                <FaUpload /> {loading ? "Uploading..." : "Upload Excel"}
-              </label>
-              <input id="file-upload" type="file" className="hidden" onChange={handleUpload} accept=".xlsx, .xls, .csv" />
-            </div>
+      <div className="flex justify-center mb-10">
+        <label
+          htmlFor="file-upload"
+          className="flex items-center gap-3 px-6 py-3 text-white font-medium bg-blue-600 rounded-lg shadow hover:bg-blue-700 cursor-pointer"
+        >
+          <FaUpload /> {loading ? "Uploading..." : "Upload Excel"}
+        </label>
+        <input
+          id="file-upload"
+          type="file"
+          className="hidden"
+          onChange={handleUpload}
+          accept=".xlsx, .xls, .csv"
+        />
+      </div>
 
-            {students.length > 0 && (
-              <>
-                <div className="overflow-x-auto mb-6 rounded-xl border border-blue-100 shadow">
-                  <table className="min-w-full text-sm text-gray-700">
-                    <thead className="bg-blue-100 text-blue-900 text-xs uppercase tracking-wider">
-                      <tr>
-                        <th className="p-4 text-left">Select</th>
-                        <th className="p-4 text-left">Name</th>
-                        <th className="p-4 text-left">Email</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((stu, i) => (
-                        <tr key={i} className="border-t border-gray-200 hover:bg-blue-50 transition">
-                          <td className="p-4 text-center">
-                            <input
-                              type="checkbox"
-                              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              onChange={() => toggleSelect(stu.email)}
-                              checked={!!selected[stu.email]}
-                            />
-                          </td>
-                          <td className="p-4">{stu.name}</td>
-                          <td className="p-4">{stu.email}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
-                    saving ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-                  }`}
-                >
-                  {saving ? "Saving..." : "Add Selected Students"}
-                </button>
-
-                {credentials.length > 0 && (
-                  <button
-                    onClick={handleDownloadCSV}
-                    className="w-full py-3 mt-4 text-lg font-semibold text-white rounded-xl bg-yellow-500 hover:bg-yellow-600 transition"
-                  >
-                    <FaDownload className="inline mr-2" /> Download Credentials CSV
-                  </button>
-                )}
-              </>
-            )}
+      {students.length > 0 && (
+        <>
+          <div className="overflow-x-auto mb-6 rounded-xl border border-blue-100 shadow">
+            <table className="min-w-full text-sm text-gray-700">
+              <thead className="bg-blue-100 text-blue-900 text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="p-4 text-left">Select</th>
+                  <th className="p-4 text-left">Name</th>
+                  <th className="p-4 text-left">Email</th>
+                  <th className="p-4 text-left">phone</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((stu, i) => (
+                  <tr key={i} className="border-t border-gray-200 hover:bg-blue-50 transition">
+                    <td className="p-4 text-center">
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        onChange={() => toggleSelect(stu.email)}
+                        checked={!!selected[stu.email]}
+                      />
+                    </td>
+                    <td className="p-4">{stu.name}</td>
+                    <td className="p-4">{stu.email}</td>
+                    <td className="p-4">{stu.phone}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
+              saving ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+            }`}
+          >
+            {saving ? "Saving..." : "Add Selected Students"}
+          </button>
+
+          {credentials.length > 0 && (
+            <button
+              onClick={handleDownloadCSV}
+              className="w-full py-3 mt-4 text-lg font-semibold text-white rounded-xl bg-yellow-500 hover:bg-yellow-600 transition"
+            >
+              <FaDownload className="inline mr-2" /> Download Credentials CSV
+            </button>
+          )}
+        </>
       )}
     </div>
+  </div>
+)}
+
+    </div>
+
+
   );
 };
 

@@ -36,10 +36,9 @@ router.post('/save', async (req, res) => {
 // ✅ Route to get Top Performers for course
 router.get('/top/:course', async (req, res) => {
   const { course } = req.params;
-
   try {
     const top = await Test.aggregate([
-      { $match: { course } },
+      { $match: {course: { $regex: new RegExp(`^${course}$`, 'i') } } } ,
       {
         $addFields: {
           quizAvg: { $avg: "$quiz" },
@@ -84,7 +83,6 @@ router.get('/top/:course', async (req, res) => {
         }
       }
     ]);
-
     res.json(top);
   } catch (err) {
     console.error(err);

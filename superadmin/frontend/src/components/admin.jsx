@@ -27,12 +27,12 @@ export default function Admins() {
   }, []);
 
   const fetchAdmins = async () => {
-    const res = await axios.get('http://localhost:5000/api/admins');
+    const res = await axios.get('http://localhost:5001/api/admins');
     setAdmins(res.data);
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/admins/${id}`);
+    await axios.delete(`http://localhost:5001/api/admins/${id}`);
     fetchAdmins();
   };
 
@@ -50,10 +50,10 @@ export default function Admins() {
 
   try {
     if (isEditing) {
-      await axios.put(`http://localhost:5000/api/admins/${editingId}`, payload);
+      await axios.put(`http://localhost:5001/api/admins/${editingId}`, payload);
       alert("Lecturer updated.");
     } else {
-      const res = await axios.post('http://localhost:5000/api/admins', payload);
+      const res = await axios.post('http://localhost:5001/api/admins', payload);
       setGeneratedPassword(res.data.generatedPassword);
       alert(`Lecturer added. Temporary password: ${res.data.generatedPassword}`);
     }

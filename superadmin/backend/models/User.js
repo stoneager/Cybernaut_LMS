@@ -8,4 +8,3 @@ const userSchema = new mongoose.Schema({
   activeToken: { type: String, default: null },
 });
 module.exports = mongoose.model('User', userSchema);
-

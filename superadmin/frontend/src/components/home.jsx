@@ -19,7 +19,7 @@ const [overview, setOverview] = useState(null);
 useEffect(() => {
   const fetchOverview = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/system/overview");
+      const res = await axios.get("http://localhost:5001/api/system/overview");
       setOverview(res.data);
     } catch (err) {
       console.error("Failed to load overview", err);
@@ -32,7 +32,7 @@ useEffect(() => {
   
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/stats')
+    axios.get('http://localhost:5001/api/stats')
       .then(response => setStats(response.data))
       .catch(error => console.error('Error fetching stats:', error));
 

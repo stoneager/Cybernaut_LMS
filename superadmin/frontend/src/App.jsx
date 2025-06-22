@@ -7,6 +7,7 @@ import Admins from './components/admin';
 import Salary from './components/salary';
 import Batches from './components/batches';
 import Payment from './components/payment';
+import AnalyticsPage from './components/analyticspage';
 import CreateBatch from './components/createbatch';
 import StudentList from './components/studentlist';
 import TopPerformers from './components/topperformers';
@@ -22,12 +23,13 @@ const routeTitles = {
   '/batches': 'Batch Management',
   '/courses': 'Course Management',
   '/students' : 'Student Management',
+  '/analytics' : 'Analytics',
 };
 
 const AppContent = () => {
   const location = useLocation();
   const pageTitle = routeTitles[location.pathname] || 'Dashboard';
-
+  
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
@@ -42,6 +44,8 @@ const AppContent = () => {
             <Route path="/students" element={<Student />} />
             <Route path="/courses" element={<Courses />} />
             <Route path='/salary' element = {<Payment/>} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+
 
           </Routes>
         </main>

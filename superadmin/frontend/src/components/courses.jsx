@@ -20,7 +20,7 @@ const Courses = () => {
   }, []);
 
   const fetchCourses = () => {
-    axios.get("http://localhost:5000/api/courses")
+    axios.get("http://localhost:5001/api/courses")
       .then((res) => {
         if (Array.isArray(res.data)) {
           setCourses(res.data);
@@ -34,7 +34,7 @@ const Courses = () => {
       courseName: newCourseName.trim(),
       modules: newModules.split(',').map(mod => mod.trim()),
     };
-    axios.post("http://localhost:5000/api/courses", newCourse)
+    axios.post("http://localhost:5001/api/courses", newCourse)
       .then(() => {
         fetchCourses();
         setShowModal(false);

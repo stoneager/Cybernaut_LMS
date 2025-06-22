@@ -11,7 +11,7 @@ export default function Salary() {
   useEffect(() => { fetchAdmins(); }, []);
 
   async function fetchAdmins() {
-    const res = await axios.get('http://localhost:5000/api/salary/');
+    const res = await axios.get('http://localhost:5001/api/salary/');
     const nowMonth = new Date().getMonth();
     setAdmins(res.data.map(admin => ({
       ...admin,
@@ -20,7 +20,7 @@ export default function Salary() {
   }
 
   async function payAdmin(admin) {
-    const res = await axios.post(`http://localhost:5000/api/salary/${admin._id}/pay`);
+    const res = await axios.post(`http://localhost:5001/api/salary/${admin._id}/pay`);
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY,
       amount: res.data.amount,

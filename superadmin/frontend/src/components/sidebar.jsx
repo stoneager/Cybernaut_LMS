@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
   FaHome, FaBook, FaUser, FaUsers, FaChartBar, FaFolderPlus,
-  FaMoneyBill, FaCog, FaEnvelope, FaSignOutAlt
+  FaMoneyBill, FaCog, FaEnvelope, FaSignOutAlt , FaChartPie
 } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 
@@ -15,6 +15,7 @@ const menuItems = [
   { id: "students", icon: <FaUsers />, label: "Student Management", path: "/students" }, // 👈 Added
   { id: "salary", icon: <FaMoneyBill />, label: "Salary Management", path: "/salary" },
   { id: "communication", icon: <FaEnvelope />, label: "Communication", path: "/communication" },
+  {id:"analytics",icon:<FaChartPie/> , label:"Analytics" , path:"/analytics"},
 ];
 
 
@@ -51,6 +52,30 @@ export default function Sidebar() {
 
   fetchSuperAdmin();
 }, []);
+
+const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(
+        "http://localhost:5000/auth/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // Redirect to login page (adjust URL as needed)
+      window.location.href = "http://localhost:3000/login";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 
 
   return (
@@ -111,10 +136,7 @@ export default function Sidebar() {
           Settings
         </button>
         <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/login");
-          }}
+          onClick={handleLogout}
           className="flex items-center gap-3 text-sm text-red-600 hover:text-red-800"
         >
           <FaSignOutAlt className="text-lg" />

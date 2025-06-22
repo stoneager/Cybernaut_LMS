@@ -16,7 +16,7 @@ const Student = () => {
 
   const fetchStudents = async () => {
   try {
-    const res = await axios.get("http://localhost:5000/api/students");
+    const res = await axios.get("http://localhost:5001/api/students");
     const studentList = res.data;
 
     setStudents(studentList);

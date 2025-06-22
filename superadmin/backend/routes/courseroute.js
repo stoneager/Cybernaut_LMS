@@ -33,6 +33,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+
+router.get('/names', async (req, res) => {
+  try {
+    const courses = await Course.find({}, 'courseName'); // only fetch courseName field
+    const courseNames = courses.map(course => course.courseName);
+    res.json(courseNames);
+  } catch (error) {
+    console.error("Error fetching course names:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.post('/', async (req, res) => {
   const { courseName, modules, image } = req.body;
   const course = new Course({ courseName, modules, image });
