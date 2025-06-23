@@ -1,4 +1,0 @@
-John Doe: Hello Group
-John Doe: Hello again, I'm testing
-Ani: hello group
-John Doe: hello

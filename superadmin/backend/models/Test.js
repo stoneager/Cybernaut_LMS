@@ -6,11 +6,10 @@ const testSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  batch: ref,
+  batch: String,
   quiz: [{ type: Number, max: 10 }],
   assignment: [{ type: Number, max: 10 }],
   code: [{ type: Number, max: 10 }],
-  note : ref,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Test', testSchema);

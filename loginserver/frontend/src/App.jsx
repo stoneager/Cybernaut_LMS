@@ -25,7 +25,7 @@ function App() {
         <Route 
         path="/" element ={
           <PrivateRoute>
-            <Register/>
+            <>Hello</>
           </PrivateRoute>
         } />
         

@@ -10,6 +10,7 @@ const adminBatch = require("./routes/adminBatch");
 const reportRoutes = require("./routes/reportRoutes");
 const adminEvaluation = require("./routes/adminEvaluation");
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const uploadRoutes = require('./routes/upload'); // adjust path
 
 
 const app = express();
@@ -25,7 +26,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Static route to access uploaded files
 
-
+app.use(uploadRoutes);
 app.use('/notes', noteRoutes);
 app.use("/api/admin-batches", adminBatch);
 app.use("/api/reports", reportRoutes);

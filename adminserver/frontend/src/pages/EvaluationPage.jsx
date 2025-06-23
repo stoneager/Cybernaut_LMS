@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import UserContext from '../context/UserContext';
+//import UserContext from '../context/UserContext';
 
 export default function EvaluationPage() {
   const { batchName, title } = useParams();
-  const { userData } = useContext(UserContext);
+  const { userData } = useContext({});
   const [submissions, setSubs] = useState([]);
 
   useEffect(() => {

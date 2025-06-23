@@ -1,164 +1,244 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-
-export default function AdminNotes() {
+import AdminLayout from '../components/AdminLayout';
+export default function LessonPlan() {
   const { batchId } = useParams();
   const navigate = useNavigate();
-
-  const [adminData, setAdminData] = useState(null);
-  const [form, setForm] = useState({
-    title: '',
-    meetlink: '',
-    quizlink: '',
-    assignmentlink: '',
-    day: '',
-  });
+  const [form, setForm] = useState({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
   const [pdfFile, setPdfFile] = useState(null);
+  const [adminId, setAdminId] = useState(null);
+  const [module, setModule] = useState('');
+  const [notes, setNotes] = useState([]);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const backendBase = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+  const [batchDetails, setBatchDetails] = useState({});
+  const backendBase = 'http://localhost:5002';
+  const token = localStorage.getItem('token');
 
-  // ✅ Fetch logged-in user (admin) data from backend
   useEffect(() => {
-    const fetchAdmin = async () => {
+  const fetchBatchModule = async () => {
+    try {
+      const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const batch = res.data;
+
+      // Save batchName and course name
+      setBatchDetails({
+        batchName: batch.batchName,
+        courseName: batch.course.name,
+      });
+
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const currentAdminId = tokenPayload.id;
+
+      const adminEntry = batch.admins.find(a => a.admin === currentAdminId);
+      if (!adminEntry) return navigate('/unauthorized');
+
+      setAdminId(currentAdminId);
+      setModule(adminEntry.module);
+    } catch (err) {
+      console.error('Batch fetch failed:', err);
+      navigate('/login');
+    }
+  };
+
+  fetchBatchModule();
+}, [batchId, navigate, token]);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      console.log("Module : "+module);
+      if (!module) return;
       try {
-        const res = await axios.get(`${backendBase}/auth/me`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        const res = await axios.get(`${backendBase}/notes/${batchId}/${module}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setAdminData(res.data);
+        setNotes(res.data.sort((a, b) => parseInt(a.day) - parseInt(b.day)));
       } catch (err) {
-        console.error('Failed to fetch admin data:', err.response || err);
-        alert('Failed to fetch admin info. Please login again.');
-        navigate('/login');
+        console.error('Note fetch failed:', err);
       }
     };
-    fetchAdmin();
-  }, [navigate]);
+    fetchNotes();
+  }, [module, batchId, token]);
 
-  const addNote = async () => {
-    if (!form.title || !form.day || !adminData || !adminData.domain) {
-      return alert('Fill in title, day, and ensure you are logged in.');
-    }
+  const openModalForAdd = () => {
+    setEditingNoteId(null);
+    setForm({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
+    setPdfFile(null);
+    setShowModal(true);
+  };
+
+  const openModalForEdit = note => {
+    setForm({
+      title: note.title,
+      meetlink: note.meetlink,
+      quizlink: note.quizlink,
+      assignmentlink: note.assignmentlink,
+      day: note.day,
+    });
+    setEditingNoteId(note._id);
+    setPdfFile(null);
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.day || !module || !adminId) return alert('Fill title, day, and module');
 
     try {
       let assignmentFilePath = '';
-
-      // 1️⃣ Upload PDF if selected
+      console.log("Module : "+module);
       if (pdfFile) {
         const formData = new FormData();
         formData.append('file', pdfFile);
-
         await axios.post(
-          `${backendBase}/upload-assignment?` +
-            `batch=${encodeURIComponent(batchId)}&` +
-            `module=${encodeURIComponent(adminData.domain)}&` +
-            `title=${encodeURIComponent(form.title)}`,
+          `${backendBase}/upload-assignment?batch=${encodeURIComponent(batchId)}&module=${encodeURIComponent(module)}&title=${encodeURIComponent(form.title)}`,
           formData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
+        const uploadRes = await axios.post(
+  `${backendBase}/upload-assignment?` +
+    `batch=${encodeURIComponent(batchId)}&` +
+    `module=${encodeURIComponent(module)}&` +
+    `title=${encodeURIComponent(form.title)}`,
+  formData,
+  {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
-        assignmentFilePath =
-          `${backendBase}/uploads/` +
-          `${encodeURIComponent(batchId)}/` +
-          `${encodeURIComponent(adminData.domain)}/` +
-          `${encodeURIComponent(form.title)}/assignment/question.pdf`;
+assignmentFilePath = backendBase + uploadRes.data.path;
+
       }
 
-      // 2️⃣ Create the note
-      await axios.post(
-        `${backendBase}/notes`,
-        {
-          title: form.title,
-          meetlink: form.meetlink,
-          quizlink: form.quizlink,
-          assignmentlink: form.assignmentlink || '',
-          assignmentFilePath,
-          batch: batchId,
-          module: adminData.domain,
-          admin: adminData._id,
-          day: form.day,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const payload = {
+        ...form,
+        batch: batchId,
+        module,
+        admin: adminId,
+        assignmentFilePath,
+      };
 
-      navigate(`/admin/batch/${batchId}`);
+      if (editingNoteId) {
+        await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await axios.post(`${backendBase}/notes`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      setForm({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
+      setPdfFile(null);
+      setEditingNoteId(null);
+      setShowModal(false);
+      window.location.reload();
     } catch (err) {
-      console.error('Error creating note:', err.response || err);
-      alert(err.response?.data?.error || 'Failed to create note');
+      console.error('Note error:', err.response || err);
+      alert(err.response?.data?.error || 'Operation failed');
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h3 className="text-2xl font-semibold mb-6 text-gray-800">
-        Create Note for <span className="text-blue-600">{batchId}</span>{' '}
-        {adminData && (
-          <>
-            — Module <span className="text-green-600">{adminData.domain}</span>
-          </>
-        )}
-      </h3>
+    <AdminLayout>
+    <div className="max-w-4xl mx-auto mt-10 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-800">
+  Lesson Plan — Batch {batchDetails.batchName || batchId} 
+  {batchDetails.courseName && (
+    <span className="text-gray-500 text-base"> ({batchDetails.courseName})</span>
+  )}
+</h3>
 
-      <div className="space-y-4">
-        <input
-          className="w-full border border-gray-300 p-3 rounded-lg"
-          placeholder="Title"
-          value={form.title}
-          onChange={e => setForm({ ...form, title: e.target.value })}
-        />
-
-        <input
-          className="w-full border border-gray-300 p-3 rounded-lg"
-          placeholder="Meet Link"
-          value={form.meetlink}
-          onChange={e => setForm({ ...form, meetlink: e.target.value })}
-        />
-
-        <input
-          className="w-full border border-gray-300 p-3 rounded-lg"
-          placeholder="Quiz Link"
-          value={form.quizlink}
-          onChange={e => setForm({ ...form, quizlink: e.target.value })}
-        />
-
-        <input
-          className="w-full border border-gray-300 p-3 rounded-lg"
-          placeholder="External Assignment Link (optional)"
-          value={form.assignmentlink}
-          onChange={e => setForm({ ...form, assignmentlink: e.target.value })}
-        />
-
-        <input
-          type="number"
-          placeholder="Day (e.g., 1)"
-          className="w-full border border-gray-300 p-3 rounded-lg"
-          value={form.day}
-          onChange={e => setForm({ ...form, day: e.target.value })}
-        />
-
-        <input
-          type="file"
-          accept="application/pdf"
-          className="w-full p-2 border border-dashed border-gray-400 rounded-lg bg-gray-50"
-          onChange={e => setPdfFile(e.target.files[0])}
-        />
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          onClick={openModalForAdd}
+        >
+          + Add Note
+        </button>
       </div>
 
-      <button
-        className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
-        onClick={addNote}
-      >
-        Add Note
-      </button>
+      {notes.length === 0 ? (
+        <p className="text-gray-500">No notes found.</p>
+      ) : (
+        <div className="space-y-4">
+          {notes.map(note => {
+            const isToday = new Date(note.createdAt).toISOString().split('T')[0] === today;
+            return (
+              <div key={note._id} className={`p-4 border rounded-lg ${isToday ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}>
+                <h4 className="font-semibold text-lg">Day {note.day}: {note.title}</h4>
+                <p>Meet: <a href={note.meetlink} className="text-blue-600" target="_blank" rel="noreferrer">{note.meetlink}</a></p>
+                <p>Quiz: <a href={note.quizlink} className="text-blue-600" target="_blank" rel="noreferrer">{note.quizlink}</a></p>
+                {note.assignmentlink && (
+                  <p>Assignment Link: <a href={note.assignmentlink} className="text-blue-600" target="_blank" rel="noreferrer">Open</a></p>
+                )}
+                {note.assignmentFilePath && (
+                  <p>Assignment PDF: <a href={note.assignmentFilePath} className="text-green-600" target="_blank" rel="noreferrer">Download</a></p>
+                )}
+                <button onClick={() => openModalForEdit(note)} className="mt-2 text-sm text-blue-700 underline">Edit</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-20 z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
+            <button
+              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+              onClick={() => setShowModal(false)}
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-semibold mb-4">
+              {editingNoteId ? 'Edit Note' : 'Add Note'} — {module}
+            </h3>
+
+            <div className="space-y-4">
+              <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title}
+                onChange={e => setForm({ ...form, title: e.target.value })} />
+
+              <input className="w-full border p-3 rounded-lg" placeholder="Meet Link" value={form.meetlink}
+                onChange={e => setForm({ ...form, meetlink: e.target.value })} />
+
+              <input className="w-full border p-3 rounded-lg" placeholder="Quiz Link" value={form.quizlink}
+                onChange={e => setForm({ ...form, quizlink: e.target.value })} />
+
+              <input className="w-full border p-3 rounded-lg" placeholder="External Assignment Link" value={form.assignmentlink}
+                onChange={e => setForm({ ...form, assignmentlink: e.target.value })} />
+
+              <input type="number" className="w-full border p-3 rounded-lg" placeholder="Day" value={form.day}
+                onChange={e => setForm({ ...form, day: e.target.value })} />
+
+              <input type="file" accept="application/pdf"
+                className="w-full p-2 border border-dashed border-gray-400 rounded-lg bg-gray-50"
+                onChange={e => setPdfFile(e.target.files[0])} />
+
+              <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+                onClick={handleSubmit}>
+                {editingNoteId ? 'Update Note' : 'Add Note'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </AdminLayout>
   );
 }

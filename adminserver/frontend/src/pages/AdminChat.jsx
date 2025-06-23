@@ -5,10 +5,12 @@ import { io } from "socket.io-client";
 const socket = io("http://localhost:5004");
 
 const AdminChat = () => {
-  const batch = "B1"; // Replace with actual admin batch if dynamic
-  const sender = "admin1"; // Replace with actual admin name or ID
-
+  const [sender, setSender] = useState("");
+  const [course, setCourse] = useState("");
+  const [batch, setBatch] = useState("");
+  const [module, setModule] = useState("");
   const [students, setStudents] = useState([]);
+
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [chatType, setChatType] = useState(""); // "superadmin" | "student" | "forum"
   const [messages, setMessages] = useState([]);
@@ -17,24 +19,52 @@ const AdminChat = () => {
 
   const room =
     chatType === "superadmin"
-      ? `${batch}/admins/superadmin`
+      ? `admins/${sender}`
       : chatType === "forum"
-      ? `${batch}/forum/general`
+      ? `${course}/${batch}/forum/${module}/general`
       : chatType === "student" && selectedTarget
-      ? `${batch}/students/${selectedTarget}`
+      ? `${course}/${batch}/${module}/students/${selectedTarget}`
       : null;
 
+  // ✅ Fetch admin details from token (batches)
   useEffect(() => {
+    const fetchMyBatch = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5002/api/admin-batches/my-batches", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log(res.data[0]);
+        const myId = JSON.parse(atob(token.split('.')[1])).id;
+        const batchData = res.data[0]; // First assigned batch
+
+        setCourse(batchData.course.courseName);
+        setBatch(batchData.batchName);
+
+        const adminInfo = batchData.admins.find(a => a.admin._id === myId);
+        setSender(adminInfo.admin.name);
+        setModule(adminInfo.module);
+
+      } catch (err) {
+        console.error("Error fetching admin batch", err);
+      }
+    };
+    fetchMyBatch();
+  }, []);
+
+  // ✅ Load students for current batch/module
+  useEffect(() => {
+    if (!course || !batch || !module) return;
     const fetchStudents = async () => {
       try {
-        const res = await axios.get(`http://localhost:5004/chatrooms/${batch}/students`);
+        const res = await axios.get(`http://localhost:5004/chatrooms/${course}/${batch}/${module}/students`);
         setStudents(res.data);
       } catch (err) {
         console.error("Error loading students", err);
       }
     };
     fetchStudents();
-  }, [batch]);
+  }, [course, batch, module]);
 
   useEffect(() => {
     if (!room) return;
@@ -114,7 +144,12 @@ const AdminChat = () => {
         {room ? (
           <>
             <div className="p-4 border-b bg-white font-semibold text-lg capitalize">
-              Chat with {chatType === "superadmin" ? "SuperAdmin" : chatType === "forum" ? "Forum" : selectedTarget}
+              Chat with{" "}
+              {chatType === "superadmin"
+                ? "SuperAdmin"
+                : chatType === "forum"
+                ? "Forum"
+                : selectedTarget}
             </div>
 
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-2" ref={chatRef}>

@@ -10,6 +10,7 @@ import Payment from './components/payment';
 import AnalyticsPage from './components/analyticspage';
 import Courses from './components/courses';
 import Student from './components/student';
+import SuperAdminChat from './components/superadminchat';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -46,7 +47,8 @@ const AppContent = () => {
             <Route path="/students" element={<Student />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/salary" element={<Payment />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />}/>
+            <Route path='/communication' element = {<SuperAdminChat/>} />
           </Routes>
         </main>
       </div>
