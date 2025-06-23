@@ -6,7 +6,7 @@ import AdminHome from "./components/AdminHome";
 import EvaluationPage from './pages/EvaluationPage';
 import ReportPage from "./pages/ReportPage";
 import LessonPlan from './pages/LessonPlan';
-import ChatPage from './pages/ChatPage';
+import AdminChat from './pages/AdminChat';
 
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -68,7 +68,7 @@ function AppRoutes() {
           path="/batch/:batchId/chat"
           element={
             <PrivateRoute>
-              <ChatPage />
+              <AdminChat />
             </PrivateRoute>
           }
         />

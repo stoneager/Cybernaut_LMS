@@ -90,12 +90,12 @@ export default function Admins() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Lecturer Management</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Admin Management</h2>
         <button
           onClick={() => setShowModal(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"
         >
-          <MdPersonAdd className="mr-2" /> Add Lecturer
+          <MdPersonAdd className="mr-2" /> Add Admin
         </button>
       </div>
 

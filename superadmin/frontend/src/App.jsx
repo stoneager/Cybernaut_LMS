@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/sidebar';
 import Topbar from './components/topbar';
@@ -8,9 +8,6 @@ import Salary from './components/salary';
 import Batches from './components/batches';
 import Payment from './components/payment';
 import AnalyticsPage from './components/analyticspage';
-import CreateBatch from './components/createbatch';
-import StudentList from './components/studentlist';
-import TopPerformers from './components/topperformers';
 import Courses from './components/courses';
 import Student from './components/student';
 import { ToastContainer } from 'react-toastify';
@@ -22,18 +19,23 @@ const routeTitles = {
   '/salary': 'Salary Management',
   '/batches': 'Batch Management',
   '/courses': 'Course Management',
-  '/students' : 'Student Management',
-  '/analytics' : 'Analytics',
+  '/students': 'Student Management',
+  '/analytics': 'Analytics',
 };
 
 const AppContent = () => {
   const location = useLocation();
   const pageTitle = routeTitles[location.pathname] || 'Dashboard';
-  
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <Sidebar onHover={setIsSidebarExpanded} />
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          isSidebarExpanded ? 'ml-64' : 'ml-20'
+        }`}
+      >
         <Topbar pageTitle={pageTitle} />
         <ToastContainer position="top-right" autoClose={3000} />
         <main className="flex-1 transition-all duration-300 ease-in-out p-2">
@@ -43,10 +45,8 @@ const AppContent = () => {
             <Route path="/batches" element={<Batches />} />
             <Route path="/students" element={<Student />} />
             <Route path="/courses" element={<Courses />} />
-            <Route path='/salary' element = {<Payment/>} />
+            <Route path="/salary" element={<Payment />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
-
-
           </Routes>
         </main>
       </div>

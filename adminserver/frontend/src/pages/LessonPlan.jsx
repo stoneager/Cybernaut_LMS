@@ -1,83 +1,164 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import AdminLayout from '../components/AdminLayout';
-import { FaEdit } from 'react-icons/fa';  // edit icon
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
-export default function LessonPlan() {
+export default function AdminNotes() {
   const { batchId } = useParams();
-  const [plans, setPlans] = useState([]);
+  const navigate = useNavigate();
 
+  const [adminData, setAdminData] = useState(null);
+  const [form, setForm] = useState({
+    title: '',
+    meetlink: '',
+    quizlink: '',
+    assignmentlink: '',
+    day: '',
+  });
+  const [pdfFile, setPdfFile] = useState(null);
+
+  const backendBase = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+
+  // ✅ Fetch logged-in user (admin) data from backend
   useEffect(() => {
-    fetchLessonPlans();
-  }, []);
+    const fetchAdmin = async () => {
+      try {
+        const res = await axios.get(`${backendBase}/auth/me`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        setAdminData(res.data);
+      } catch (err) {
+        console.error('Failed to fetch admin data:', err.response || err);
+        alert('Failed to fetch admin info. Please login again.');
+        navigate('/login');
+      }
+    };
+    fetchAdmin();
+  }, [navigate]);
 
-  const fetchLessonPlans = async () => {
+  const addNote = async () => {
+    if (!form.title || !form.day || !adminData || !adminData.domain) {
+      return alert('Fill in title, day, and ensure you are logged in.');
+    }
+
     try {
-      console.log("Yet to Complete");
+      let assignmentFilePath = '';
+
+      // 1️⃣ Upload PDF if selected
+      if (pdfFile) {
+        const formData = new FormData();
+        formData.append('file', pdfFile);
+
+        await axios.post(
+          `${backendBase}/upload-assignment?` +
+            `batch=${encodeURIComponent(batchId)}&` +
+            `module=${encodeURIComponent(adminData.domain)}&` +
+            `title=${encodeURIComponent(form.title)}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+
+        assignmentFilePath =
+          `${backendBase}/uploads/` +
+          `${encodeURIComponent(batchId)}/` +
+          `${encodeURIComponent(adminData.domain)}/` +
+          `${encodeURIComponent(form.title)}/assignment/question.pdf`;
+      }
+
+      // 2️⃣ Create the note
+      await axios.post(
+        `${backendBase}/notes`,
+        {
+          title: form.title,
+          meetlink: form.meetlink,
+          quizlink: form.quizlink,
+          assignmentlink: form.assignmentlink || '',
+          assignmentFilePath,
+          batch: batchId,
+          module: adminData.domain,
+          admin: adminData._id,
+          day: form.day,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      navigate(`/admin/batch/${batchId}`);
     } catch (err) {
-      console.error("Error fetching lesson plans", err);
+      console.error('Error creating note:', err.response || err);
+      alert(err.response?.data?.error || 'Failed to create note');
     }
   };
 
-  const handleEdit = (plan) => {
-    // 👉 You can open a modal here to edit the fields.
-    console.log("Edit clicked for:", plan);
-  };
-
-  if (plans.length === 0) {
-    return (
-      <AdminLayout>
-        <div className="p-6 bg-gray-50 min-h-screen">
-          <h1 className="text-2xl font-bold mb-4">Lesson Plan</h1>
-          <p>No lesson plans available.</p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  const [firstPlan, ...otherPlans] = plans;
-
   return (
-    <AdminLayout>
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <h1 className="text-2xl font-bold mb-6">Lesson Plan</h1>
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
+      <h3 className="text-2xl font-semibold mb-6 text-gray-800">
+        Create Note for <span className="text-blue-600">{batchId}</span>{' '}
+        {adminData && (
+          <>
+            — Module <span className="text-green-600">{adminData.domain}</span>
+          </>
+        )}
+      </h3>
 
-        {/* Latest Day (larger card) */}
-        <div className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white p-8 rounded-xl shadow-lg mb-6 relative">
-          <h2 className="text-4xl font-bold mb-4">Day {firstPlan.day}</h2>
-          <p><span className="font-semibold">Meeting Link:</span> {firstPlan.meetingLink || "N/A"}</p>
-          <p><span className="font-semibold">Quiz:</span> {firstPlan.quiz || "N/A"}</p>
-          <p><span className="font-semibold">Coding Question:</span> {firstPlan.codingQuestion || "N/A"}</p>
-          
-          {/* Edit button */}
-          <button 
-            className="absolute top-4 right-4 bg-white text-blue-500 p-2 rounded-full shadow-md hover:bg-blue-100 transition"
-            onClick={() => handleEdit(firstPlan)}
-          >
-            <FaEdit size={20} />
-          </button>
-        </div>
+      <div className="space-y-4">
+        <input
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          placeholder="Title"
+          value={form.title}
+          onChange={e => setForm({ ...form, title: e.target.value })}
+        />
 
-        {/* Remaining Days */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {otherPlans.map((plan) => (
-            <div key={plan._id} className="bg-white p-6 rounded-lg shadow-md relative">
-              <h2 className="text-xl font-semibold mb-2 text-blue-600">Day {plan.day}</h2>
-              <p><span className="font-medium">Meeting Link:</span> {plan.meetingLink || "N/A"}</p>
-              <p><span className="font-medium">Quiz:</span> {plan.quiz || "N/A"}</p>
-              <p><span className="font-medium">Coding Question:</span> {plan.codingQuestion || "N/A"}</p>
+        <input
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          placeholder="Meet Link"
+          value={form.meetlink}
+          onChange={e => setForm({ ...form, meetlink: e.target.value })}
+        />
 
-              {/* Edit button */}
-              <button 
-                className="absolute top-4 right-4 bg-blue-500 text-white p-2 rounded-full shadow-md hover:bg-blue-600 transition"
-                onClick={() => handleEdit(plan)}
-              >
-                <FaEdit size={18} />
-              </button>
-            </div>
-          ))}
-        </div>
+        <input
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          placeholder="Quiz Link"
+          value={form.quizlink}
+          onChange={e => setForm({ ...form, quizlink: e.target.value })}
+        />
+
+        <input
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          placeholder="External Assignment Link (optional)"
+          value={form.assignmentlink}
+          onChange={e => setForm({ ...form, assignmentlink: e.target.value })}
+        />
+
+        <input
+          type="number"
+          placeholder="Day (e.g., 1)"
+          className="w-full border border-gray-300 p-3 rounded-lg"
+          value={form.day}
+          onChange={e => setForm({ ...form, day: e.target.value })}
+        />
+
+        <input
+          type="file"
+          accept="application/pdf"
+          className="w-full p-2 border border-dashed border-gray-400 rounded-lg bg-gray-50"
+          onChange={e => setPdfFile(e.target.files[0])}
+        />
       </div>
-    </AdminLayout>
+
+      <button
+        className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+        onClick={addNote}
+      >
+        Add Note
+      </button>
+    </div>
   );
 }
