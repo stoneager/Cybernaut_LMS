@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import AdminLayout from '../components/AdminLayout';
+
 export default function LessonPlan() {
   const { batchId } = useParams();
   const navigate = useNavigate();
@@ -17,53 +18,39 @@ export default function LessonPlan() {
   const backendBase = 'http://localhost:5002';
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-  const fetchBatchModule = async () => {
+  const fetchBatchModule = useCallback(async () => {
     try {
       const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const batch = res.data;
-
-      // Save batchName and course name
-      setBatchDetails({
-        batchName: batch.batchName,
-        courseName: batch.course.name,
-      });
-
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const currentAdminId = tokenPayload.id;
-
+      setBatchDetails({ batchName: batch.batchName, courseName: batch.course.courseName });
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentAdminId = payload.id;
       const adminEntry = batch.admins.find(a => a.admin === currentAdminId);
       if (!adminEntry) return navigate('/unauthorized');
-
       setAdminId(currentAdminId);
       setModule(adminEntry.module);
-    } catch (err) {
-      console.error('Batch fetch failed:', err);
+    } catch (e) {
+      console.error(e);
       navigate('/login');
     }
-  };
+  }, [batchId, navigate, token]);
 
-  fetchBatchModule();
-}, [batchId, navigate, token]);
+  const fetchNotes = useCallback(async () => {
+    if (!module) return;
+    try {
+      const res = await axios.get(`${backendBase}/notes/${batchId}/${module}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Sort by day descending: latest first
+      const sorted = res.data.sort((a,b) => b.day - a.day);
+      setNotes(sorted);
+    } catch (e) { console.error(e); }
+  }, [batchId, module, token]);
 
-  useEffect(() => {
-    const fetchNotes = async () => {
-      console.log("Module : "+module);
-      if (!module) return;
-      try {
-        const res = await axios.get(`${backendBase}/notes/${batchId}/${module}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNotes(res.data.sort((a, b) => parseInt(a.day) - parseInt(b.day)));
-      } catch (err) {
-        console.error('Note fetch failed:', err);
-      }
-    };
-    fetchNotes();
-  }, [module, batchId, token]);
+  useEffect(() => { fetchBatchModule(); }, [fetchBatchModule]);
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
   const openModalForAdd = () => {
     setEditingNoteId(null);
@@ -74,11 +61,8 @@ export default function LessonPlan() {
 
   const openModalForEdit = note => {
     setForm({
-      title: note.title,
-      meetlink: note.meetlink,
-      quizlink: note.quizlink,
-      assignmentlink: note.assignmentlink,
-      day: note.day,
+      title: note.title, meetlink: note.meetlink,
+      quizlink: note.quizlink, assignmentlink: note.assignmentlink, day: note.day
     });
     setEditingNoteId(note._id);
     setPdfFile(null);
@@ -86,128 +70,146 @@ export default function LessonPlan() {
   };
 
   const handleSubmit = async () => {
-    if (!form.title || !form.day || !module || !adminId) return alert('Fill title, day, and module');
-
+    if (!form.title || !form.day) return alert('Please fill title and day');
     try {
       let assignmentFilePath = '';
-      console.log("Module : "+module);
       if (pdfFile) {
-        const formData = new FormData();
-        formData.append('file', pdfFile);
+        const fd = new FormData();
+        fd.append('file', pdfFile);
         await axios.post(
-          `${backendBase}/upload-assignment?batch=${encodeURIComponent(batchId)}&module=${encodeURIComponent(module)}&title=${encodeURIComponent(form.title)}`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${backendBase}/upload-assignment?batch=${batchId}&module=${module}&title=${form.title}`,
+          fd, { headers: {'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`}}
         );
-        const uploadRes = await axios.post(
-  `${backendBase}/upload-assignment?` +
-    `batch=${encodeURIComponent(batchId)}&` +
-    `module=${encodeURIComponent(module)}&` +
-    `title=${encodeURIComponent(form.title)}`,
-  formData,
-  {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
-
-assignmentFilePath = backendBase + uploadRes.data.path;
-
       }
-
-      const payload = {
-        ...form,
-        batch: batchId,
-        module,
-        admin: adminId,
-        assignmentFilePath,
-      };
-
+      const payload = { ...form, batch: batchId, module, admin: adminId, assignmentFilePath };
       if (editingNoteId) {
-        await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(`${backendBase}/notes`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post(`${backendBase}/notes`, payload, { headers: { Authorization: `Bearer ${token}` } });
       }
-
-      setForm({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
-      setPdfFile(null);
-      setEditingNoteId(null);
       setShowModal(false);
-      window.location.reload();
-    } catch (err) {
-      console.error('Note error:', err.response || err);
-      alert(err.response?.data?.error || 'Operation failed');
+      fetchNotes();
+    } catch (e) {
+      console.error(e);
+      alert(e.response?.data?.error || 'Error saving note');
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const highlightNote = id => {
+    setNotes(notes => {
+      const idx = notes.findIndex(n => n._id === id);
+      if (idx <= 0) return notes;
+      const updated = [...notes];
+      const [moved] = updated.splice(idx,1);
+      updated.unshift(moved);
+      return updated;
+    });
+  };
+
+  if (!module) return null;
 
   return (
-    <AdminLayout>
-    <div className="max-w-4xl mx-auto mt-10 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">
-  Lesson Plan — Batch {batchDetails.batchName || batchId} 
-  {batchDetails.courseName && (
-    <span className="text-gray-500 text-base"> ({batchDetails.courseName})</span>
-  )}
-</h3>
-
+  <AdminLayout>
+    <div className="max-w-5xl mx-auto p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-blue-900">
+          Lesson Plan – {batchDetails.batchName}
+          <span className="text-gray-500 text-xl"> ({batchDetails.courseName})</span>
+          <span className="text-sm text-indigo-600 ml-2 font-medium">– Module: {module}</span>
+        </h2>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-lg hover:shadow-md transition-all"
           onClick={openModalForAdd}
         >
           + Add Note
         </button>
       </div>
 
-      {notes.length === 0 ? (
-        <p className="text-gray-500">No notes found.</p>
-      ) : (
-        <div className="space-y-4">
-          {notes.map(note => {
-            const isToday = new Date(note.createdAt).toISOString().split('T')[0] === today;
-            return (
-              <div key={note._id} className={`p-4 border rounded-lg ${isToday ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}>
-                <h4 className="font-semibold text-lg">Day {note.day}: {note.title}</h4>
-                <p>Meet: <a href={note.meetlink} className="text-blue-600" target="_blank" rel="noreferrer">{note.meetlink}</a></p>
-                <p>Quiz: <a href={note.quizlink} className="text-blue-600" target="_blank" rel="noreferrer">{note.quizlink}</a></p>
-                {note.assignmentlink && (
-                  <p>Assignment Link: <a href={note.assignmentlink} className="text-blue-600" target="_blank" rel="noreferrer">Open</a></p>
-                )}
-                {note.assignmentFilePath && (
-                  <p>Assignment PDF: <a href={note.assignmentFilePath} className="text-green-600" target="_blank" rel="noreferrer">Download</a></p>
-                )}
-                <button onClick={() => openModalForEdit(note)} className="mt-2 text-sm text-blue-700 underline">Edit</button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+   {notes.length > 0 && (
+  <div className="bg-white shadow-md rounded-xl p-6 mb-6 border border-gray-200">
+    <div className="flex justify-between items-center mb-2">
+      <h3 className="text-xl font-semibold text-gray-800">
+        📘 Day {notes[0].day}: {notes[0].title}
+      </h3>
+      <a
+        href={notes[0].meetlink}
+        target="_blank"
+        rel="noreferrer"
+        className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full hover:bg-gray-700 transition"
+      >
+        Join Meeting
+      </a>
+    </div>
 
-      {/* MODAL */}
+    <div className="space-y-1 text-sm text-gray-700 mt-2">
+      <p>📝 Quiz: <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Take Quiz</a></p>
+      {notes[0].assignmentlink && (
+        <p>🔗 Assignment: <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="text-green-600 hover:underline">View</a></p>
+      )}
+      {notes[0].assignmentFilePath && (
+        <p>📄 PDF: <a href={notes[0].assignmentFilePath} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Download</a></p>
+      )}
+    </div>
+
+    <button
+      onClick={() => openModalForEdit(notes[0])}
+      className="mt-3 text-sm text-blue-600 hover:underline"
+    >
+      ✏️ Edit
+    </button>
+  </div>
+)}
+
+      {/* Older Notes */}
+      <div className="space-y-4">
+        {notes.slice(1).map((note) => (
+          <div
+            key={note._id}
+            className="bg-white border hover:shadow-md cursor-pointer transition-all p-4 rounded-lg"
+            onClick={() => {
+              setNotes((prev) => {
+                const updated = [...prev];
+                const idx = updated.findIndex((n) => n._id === note._id);
+                if (idx > -1) {
+                  const [moved] = updated.splice(idx, 1);
+                  updated.unshift(moved);
+                }
+                return [...updated];
+              });
+            }}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-semibold text-gray-800">📘 Day {note.day}: {note.title}</p>
+                <p className="text-xs text-gray-500">Added on {new Date(note.createdAt).toLocaleDateString()}</p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openModalForEdit(note);
+                }}
+                className="text-sm text-blue-700 underline"
+              >
+                ✏️ Edit
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-20 z-50">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative animate-fade-in">
             <button
-              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+              className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
               onClick={() => setShowModal(false)}
             >
               ✕
             </button>
-            <h3 className="text-xl font-semibold mb-4">
-              {editingNoteId ? 'Edit Note' : 'Add Note'} — {module}
+            <h3 className="text-2xl font-bold mb-4 text-blue-900">
+              {editingNoteId ? 'Edit Note' : 'Add Note'} – {module}
             </h3>
 
             <div className="space-y-4">
@@ -230,7 +232,7 @@ assignmentFilePath = backendBase + uploadRes.data.path;
                 className="w-full p-2 border border-dashed border-gray-400 rounded-lg bg-gray-50"
                 onChange={e => setPdfFile(e.target.files[0])} />
 
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+              <button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg hover:shadow-lg"
                 onClick={handleSubmit}>
                 {editingNoteId ? 'Update Note' : 'Add Note'}
               </button>
@@ -239,6 +241,7 @@ assignmentFilePath = backendBase + uploadRes.data.path;
         </div>
       )}
     </div>
-    </AdminLayout>
-  );
+  </AdminLayout>
+);
+
 }

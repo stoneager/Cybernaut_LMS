@@ -1,37 +1,48 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function StudentHome() {
-  const { userData, setUserData } = useContext({});
-  const [modules, setModules] = useState([]);
+  const [student, setStudent] = useState(null);
+  const [batch, setBatch] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchModules = async () => {
+    const fetchStudentData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5003/student/modules/${userData.course_type}`);
-        setModules(res.data.modules);
+        const token = localStorage.getItem('token');
+        if (!token) return navigate('/');
+
+        const res = await axios.get('http://localhost:5000/auth/student/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStudent(res.data);
+
+        const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${res.data.batch}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setBatch(batchRes.data);
       } catch {
-        alert('Failed to load modules');
+        alert('Failed to load student');
+        navigate('/');
       }
     };
-    fetchModules();
-  }, [userData]);
+
+    fetchStudentData();
+  }, [navigate]);
 
   const logout = () => {
     localStorage.clear();
-    setUserData(null);
     navigate('/');
   };
 
+  if (!student) return <p className="text-center mt-6 text-gray-500">Loading...</p>;
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Welcome Banner */}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-3xl font-semibold text-gray-800">Welcome Student {userData?.name}</h2>
+        <h2 className="text-3xl font-semibold text-gray-800">Welcome Student {student.name}</h2>
 
-        {/* Top Action Buttons - Aligned right */}
         <div className="flex space-x-3">
           <button
             onClick={() => navigate('/student/profile')}
@@ -48,20 +59,13 @@ function StudentHome() {
         </div>
       </div>
 
-      {/* Module Buttons */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        {modules.map((mod, i) => (
-          <button
-            key={i}
-            onClick={() => navigate(`/student/module/${mod}`)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition"
-          >
-            {mod}
-          </button>
-        ))}
-      </div>
+      {batch && (
+        <div className="bg-white p-4 rounded-md shadow mb-6 cursor-pointer hover:bg-gray-100" onClick={() => navigate(`/student/batch/${batch._id}`)}>
+          <h3 className="text-xl font-semibold text-gray-700">My Batch</h3>
+          <p className="text-sm text-gray-600 mt-1">{batch.batchName} - {new Date(batch.startDate).toLocaleDateString()}</p>
+        </div>
+      )}
 
-      {/* Top Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-md shadow flex items-center justify-between">
           <div>
@@ -97,7 +101,6 @@ function StudentHome() {
         </div>
       </div>
 
-      {/* Action Buttons Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <button className="bg-purple-600 text-white py-3 rounded-md shadow hover:bg-purple-700 transition cursor-pointer">Continue Learning</button>
         <button className="bg-white border border-gray-300 py-3 rounded-md shadow hover:bg-gray-100 transition cursor-pointer">Submit Assignment</button>
@@ -105,57 +108,6 @@ function StudentHome() {
         <button className="bg-white border border-gray-300 py-3 rounded-md shadow hover:bg-gray-100 transition cursor-pointer">Ask Question</button>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Current Courses Section */}
-        <div className="lg:col-span-2 bg-white p-4 rounded-md shadow">
-          <h2 className="text-lg font-semibold mb-4">Current Courses</h2>
-          {/* Each course card */}
-          {[
-            { title: "React Advanced", instructor: "Dr. John Smith", progress: 75, time: "Today 10:00 AM" },
-            { title: "Node.js Basics", instructor: "Dr. Sarah Wilson", progress: 60, time: "Tomorrow 2:00 PM" },
-            { title: "Database Design", instructor: "Dr. Mike Johnson", progress: 90, time: "Fri 11:00 AM" },
-            { title: "Python Programming", instructor: "Dr. Emily Davis", progress: 100, time: "Completed" },
-          ].map((course, idx) => (
-            <div key={idx} className="mb-4 border border-gray-200 rounded-md p-3">
-              <p className="font-semibold">{course.title}</p>
-              <p className="text-sm text-gray-600">Instructor: {course.instructor}</p>
-              <p className="text-xs text-gray-500">Progress</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${course.progress}%` }}></div>
-              </div>
-              <p className="text-xs text-blue-600 mt-1">{course.time}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Upcoming Deadlines Section */}
-        <div className="bg-white p-4 rounded-md shadow">
-          <h2 className="text-lg font-semibold mb-4">Upcoming Deadlines</h2>
-          {[
-            { title: "React Component Assignment", course: "React Advanced", due: "Due Today", priority: "High", color: "red" },
-            { title: "Database Schema Design", course: "Database Design", due: "Due Tomorrow", priority: "Medium", color: "orange" },
-            { title: "Node.js Project", course: "Node.js Basics", due: "Due in 3 days", priority: "Low", color: "green" },
-            { title: "Final Quiz", course: "Python Programming", due: "Due in 1 week", priority: "Medium", color: "orange" },
-          ].map((task, idx) => (
-            <div
-              key={idx}
-              className={`mb-3 p-3 rounded-md flex justify-between items-center bg-${task.color}-100 text-${task.color}-700`}
-            >
-              <div>
-                <p className="font-semibold text-sm">{task.title}</p>
-                <p className="text-xs">{task.course}</p>
-              </div>
-              <div className="text-right text-xs">
-                <p>{task.due}</p>
-                <p className="capitalize">{task.priority}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Learning Progress Overview */}
       <div className="bg-white p-4 rounded-md shadow mt-6 grid grid-cols-2 md:grid-cols-4 text-center text-sm text-gray-600">
         <div>
           <p className="font-semibold text-lg text-blue-600">98%</p>

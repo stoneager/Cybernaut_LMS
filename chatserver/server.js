@@ -29,25 +29,33 @@ function getLogPath(room) {
     return path.join(dir, `${adminName}.txt`);
   }
 
-  // Rule 2: Admin ↔ Student
-  if (parts.length === 5 && parts[3] === 'students') {
-    const [course, batch, module, , studentName] = parts;
-    const dir = path.join(LOG_DIR, course, batch, module, 'students');
+  // Rule 2: Student ↔ Admin
+  // Format: course / batch / admins / adminName / students / studentName
+  if (
+    parts.length === 6 &&
+    parts[2] === 'admins' &&
+    parts[4] === 'students'
+  ) {
+    const [course, batch, , adminName, , studentName] = parts;
+    const dir = path.join(LOG_DIR, course, batch, 'admins', adminName, 'students');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     return path.join(dir, `${studentName}.txt`);
   }
 
-  // Rule 3: Batch Forum
-  if (parts.length === 5 && parts[2] === 'forum' && parts[4] === 'general') {
-    const [course, batch, , module, ] = parts;
-    const dir = path.join(LOG_DIR, course, batch, 'forum', module);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    return path.join(dir, `general.txt`);
-  }
+  // Rule 3: Forum Chat
+if (parts.length === 4 && parts[2] === 'forum' && parts[3] === 'general') {
+  const course = parts[0];
+  const batch = parts[1];
+  const dir = path.join(LOG_DIR, course, batch, 'forum');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, 'general.txt');
+}
+
 
   console.warn(`⚠️ Invalid room format: ${room}`);
   return null;
 }
+
 
 
 function loadChat(room) {
@@ -127,6 +135,20 @@ app.get('/chatrooms/metadata/:batch', (req, res) => {
   }
 });
 
+// ✅ Get batches inside a course
+app.get('/chatrooms/:course', (req, res) => {
+  const course = decodeURIComponent(req.params.course);
+  const coursePath = path.join(LOG_DIR, course);
+
+  if (!fs.existsSync(coursePath)) return res.status(404).json([]);
+
+  const batches = fs.readdirSync(coursePath).filter(entry => {
+    const fullPath = path.join(coursePath, entry);
+    return fs.statSync(fullPath).isDirectory();
+  });
+
+  res.json(batches);
+});
 
 
 app.get('/chatrooms', (req, res) => {

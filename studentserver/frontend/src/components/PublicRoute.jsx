@@ -1,7 +1,7 @@
 // components/AdminPublicRoute.jsx
 import { useEffect, useState } from "react";
 
-const AdminPublicRoute = ({ children }) => {
+const PublicRoute = ({ children }) => {
   const [canRender, setCanRender] = useState(false);
 
   useEffect(() => {
@@ -9,7 +9,7 @@ const AdminPublicRoute = ({ children }) => {
 
     if (token) {
       // Optional: verify token via API here
-      window.location.href = "http://localhost:3002/admin/dashboard"; // full redirect
+      window.location.href = "http://localhost:3003"; // full redirect
     } else {
       setCanRender(true);
     }
@@ -18,4 +18,4 @@ const AdminPublicRoute = ({ children }) => {
   return canRender ? children : null; // or a spinner
 };
 
-export default AdminPublicRoute;
+export default PublicRoute;

@@ -4,6 +4,7 @@ import PrivateRoute from './components/PrivateRoute';
 import StudentHome from './pages/StudentHome';
 import StudentChat from './pages/StudentChat';
 import { ToastContainer, toast } from 'react-toastify';
+import StudentBatch from './pages/StudentBatch';
 
 function AppRoutes() {
   const location = useLocation();
@@ -44,7 +45,18 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/student/batch/:batchId" 
+          element={
+            <PrivateRoute>
+                <StudentBatch />
+            </PrivateRoute>} />
+        
+        <Route path="/student/chat" element={<StudentChat />} />
+
       </Routes>
+
+
     </>
   );
 }

@@ -34,7 +34,7 @@ export default function Sidebar({ onHover }) {
   useEffect(() => {
     const fetchSuperAdmin = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/users?role=superadmin", {
+        const res = await axios.get("http://localhost:5000/auth/superadmin/me", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -49,6 +49,22 @@ export default function Sidebar({ onHover }) {
     };
     fetchSuperAdmin();
   }, []);
+
+const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.post(
+        "http://localhost:5000/auth/logout",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      localStorage.removeItem("token");
+      toast.success("Logged out");
+      window.location.href = "http://localhost:3000/login";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <aside
@@ -128,10 +144,7 @@ export default function Sidebar({ onHover }) {
           {expanded && "Settings"}
         </button>
         <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/login");
-          }}
+          onClick={handleLogout}
           className="flex items-center gap-3 text-sm text-red-600 hover:text-red-800"
         >
           <FaSignOutAlt className="text-lg" />

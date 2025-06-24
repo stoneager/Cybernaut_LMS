@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const Course = require('./models/Course');
 const noteRoutes = require('./routes/notes');
+const studentRoutes = require('./routes/student');
 
 const app = express();
 app.use(cors());
@@ -16,12 +17,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('/student/modules/:type', async (req, res) => {
-  const course = await Course.findOne({ course_type: req.params.type });
-  if (!course) return res.status(404).json({ modules: [] });
-  res.json({ modules: course.modules });
-});
+
 
 app.use('/notes', noteRoutes);
+app.use('/student', studentRoutes);
 
 app.listen(5003, () => console.log('Student server on 5003'));

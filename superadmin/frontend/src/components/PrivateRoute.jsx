@@ -7,30 +7,30 @@ const PrivateRoute = ({ children }) => {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const token = localStorage.getItem("token"); // ✅ use correct key
+      const token = localStorage.getItem('token');
 
       if (!token) {
-  setCheckingAuth(false);
-  setIsAuthenticated(false);
-  return;
-}
+        setIsAuthenticated(false);
+        setCheckingAuth(false);
+        window.location.href = 'http://localhost:3000'; // Redirect to login
+        return;
+      }
 
+      try {
+        await axios.get('http://localhost:5000/auth/verify', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  try {
-  await axios.get("http://localhost:5000/auth/verify", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  setIsAuthenticated(true);
-} catch (err) {
-  localStorage.removeItem("token");
-  setIsAuthenticated(false); // add this!
-} finally {
-  setCheckingAuth(false); // make sure it's always reached
-}
-
+        setIsAuthenticated(true);
+      } catch (err) {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        window.location.href = 'http://localhost:3000'; // Redirect to login
+      } finally {
+        setCheckingAuth(false);
+      }
     };
 
     verifyToken();

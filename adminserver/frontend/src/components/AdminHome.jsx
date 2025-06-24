@@ -40,7 +40,7 @@ export default function AdminHome() {
 
   return (
         <Sidebar>
-        <div className="max-w-[90%] mx-auto mt-10 p-8 bg-gradient-to-br from-blue-50 to-white rounded-3xl shadow-xl min-h-[80vh]">
+        <div className="max-w-[90%] mx-auto pt-6 min-h-[80vh]">
           <h1 className="text-3xl font-bold  text-gray-800">Your Teaching Batches</h1>
 
           {batches.length === 0 ? (

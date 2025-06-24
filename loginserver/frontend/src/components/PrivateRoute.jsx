@@ -1,36 +1,48 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import API from '../api'; // your axios instance
+import API from '../api';
 
-const PrivateRoute = ({ children }) => {
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+const PrivateRoute = () => {
   useEffect(() => {
-    const verifyToken = async () => {
+    const checkAuthAndRedirect = async () => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setCheckingAuth(false);
+      const role = localStorage.getItem('role');
+
+      if (!token || !role) {
+        window.location.href = '/login';
         return;
       }
 
       try {
-        await API.get('/auth/verify'); // A lightweight protected endpoint
-        setIsAuthenticated(true);
+        // Verify token is still valid
+        await API.get('/auth/verify', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Redirect based on role
+        if (role === 'superadmin') {
+          window.location.href = `http://localhost:3001?token=${token}&role=${role}`;
+        } else if (role === 'admin') {
+          window.location.href = `http://localhost:3002?token=${token}&role=${role}`;
+        } else if (role === 'student') {
+          window.location.href = `http://localhost:3003?token=${token}&role=${role}`;
+        } else {
+          alert('Unknown user role');
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+
       } catch (err) {
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-      } finally {
-        setCheckingAuth(false);
+        // Token invalid or expired
+        console.error('Token invalid:', err);
+        localStorage.clear();
+        window.location.href = '/login';
       }
     };
 
-    verifyToken();
+    checkAuthAndRedirect();
   }, []);
 
-  if (checkingAuth) return null; // or a loading spinner
-
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return null; // No UI rendered
 };
 
 export default PrivateRoute;

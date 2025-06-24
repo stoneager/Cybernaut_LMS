@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import logo from "../assets/logo.JPG";
-import sideImage from "../assets/login-side2.JPG";
+import sideImage from "../assets/login-side.JPG";
 
 const Login = () => {
   const [email, setEmail] = useState("");

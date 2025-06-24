@@ -7,7 +7,8 @@ import EvaluationPage from './pages/EvaluationPage';
 import ReportPage from "./pages/ReportPage";
 import LessonPlan from './pages/LessonPlan';
 import AdminChat from './pages/AdminChat';
-
+import StudentList from './pages/studentList';
+import SuperAdminChat from './pages/SuperAdminChat';
 import { ToastContainer, toast } from 'react-toastify';
 
 function AppRoutes() {
@@ -46,6 +47,24 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <AdminHome />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/students"
+          element={
+            <PrivateRoute>
+              <StudentList />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/superadmin-chat"
+          element={
+            <PrivateRoute>
+              <SuperAdminChat />
             </PrivateRoute>
           }
         />

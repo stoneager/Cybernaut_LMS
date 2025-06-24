@@ -28,7 +28,7 @@ router.post('/login', async (req, res) => {
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  console.log("Connected");
+  
 
   // ✅ Store accessToken for session verification
   user.activeToken = accessToken;
@@ -43,6 +43,7 @@ router.post('/login', async (req, res) => {
 // -----------------------------
 router.get('/student/me', verifyAccessToken, async (req, res) => {
   const student = await Student.findOne({ user: req.user.id }).populate('user');
+  
   if (!student) return res.sendStatus(404);
   res.json(student);
 });
@@ -125,7 +126,7 @@ router.post("/logout", async (req, res) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    console.log("Authorization header missing");
+    
     return res.status(400).json({ error: "Authorization header missing" });
   }
 
@@ -136,10 +137,10 @@ router.post("/logout", async (req, res) => {
     
     // Clear the activeToken field
     await User.findByIdAndUpdate(decoded.id, { activeToken: null });
-    console.log("Logged Out");
+    
     res.json({ message: "Logged out successfully" });
   } catch (err) {
-    console.log("Invalid Token", decoded,decode.id);
+    
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 });

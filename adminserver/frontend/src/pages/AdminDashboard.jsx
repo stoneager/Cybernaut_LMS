@@ -46,20 +46,40 @@ export default function AdminDashboard() {
             ₹{stats.salaryAmount.toLocaleString()}
           </p>
         </div>
+        <div className="bg-white p-4 rounded-xl shadow-md border">
+          <p className="text-sm text-gray-500">Last Paid Month</p>
+          <p className="text-3xl font-bold text-purple-700">
+            {new Date(0, stats.paidForMonth).toLocaleString("default", { month: "long" })}
+          </p>
+        </div>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-md border">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">My Batches</h3>
-          <ul>
-            {batches.map((batch) => (
-              <li key={batch._id} className="mb-2">
-                <span className="font-medium text-gray-700">{batch.courseName}</span> - {batch.batchName}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+  <div className="bg-white p-6 rounded-xl shadow-md border">
+    <h3 className="text-lg font-semibold text-blue-900 mb-4">My Batches</h3>
+    <ul>
+      {batches.map((batch) => (
+        <li key={batch._id} className="mb-4">
+          <div className="text-gray-800 font-medium">
+            {batch.courseName} - {batch.batchName}
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            Modules:{" "}
+            <span className="text-gray-700 font-semibold">
+              {Array.isArray(batch.modulesHandled) && batch.modulesHandled.length > 0
+  ? batch.modulesHandled.join(", ")
+  : "None"}
+
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</div>
+
+
     </div>
     </Sidebar>
   );

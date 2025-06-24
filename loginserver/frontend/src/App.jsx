@@ -22,12 +22,9 @@ function App() {
           </PublicRoute>
         }/>
         
-        <Route 
-        path="/" element ={
-          <PrivateRoute>
-            <>Hello</>
-          </PrivateRoute>
-        } />
+         <Route path="/" element={<PrivateRoute />} />
+
+         <Route path="*" element={<div>404 - Not Found</div>} />
         
         
       </Routes>
