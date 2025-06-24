@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
-
+import AdminDashboard from './pages/AdminDashboard';
 import AdminHome from "./components/AdminHome";
 import EvaluationPage from './pages/EvaluationPage';
 import ReportPage from "./pages/ReportPage";
@@ -36,10 +36,20 @@ function AppRoutes() {
           path="/"
           element={
             <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/batches"
+          element={
+            <PrivateRoute>
               <AdminHome />
             </PrivateRoute>
           }
         />
+
         <Route
           path="/batch/:batchId/lesson-plan"
           element={

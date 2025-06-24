@@ -24,4 +24,4 @@ app.get('/student/modules/:type', async (req, res) => {
 
 app.use('/notes', noteRoutes);
 
-app.listen(5002, () => console.log('Student server on 5002'));
+app.listen(5003, () => console.log('Student server on 5003'));

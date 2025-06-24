@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
-
+import AdminLayout from "../components/AdminLayout";
 const socket = io("http://localhost:5004");
 
 const AdminChat = () => {
@@ -98,6 +98,7 @@ const AdminChat = () => {
   };
 
   return (
+    <AdminLayout>
     <div className="flex h-screen">
       {/* Sidebar */}
       <div className="w-1/3 bg-gray-100 border-r p-4 overflow-y-auto">
@@ -196,6 +197,7 @@ const AdminChat = () => {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 };
 

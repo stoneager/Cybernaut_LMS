@@ -11,10 +11,14 @@ const reportRoutes = require("./routes/reportRoutes");
 const adminEvaluation = require("./routes/adminEvaluation");
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const uploadRoutes = require('./routes/upload'); // adjust path
-
+const adminDashboard = require('./routes/adminDasboard');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3002', // specific origin
+  credentials: true                // allow credentials (cookies, auth headers, etc.)
+}));
+
 app.use(express.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -32,5 +36,6 @@ app.use("/api/admin-batches", adminBatch);
 app.use("/api/reports", reportRoutes);
 app.use("/api/evaluation", adminEvaluation);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/dashboard',adminDashboard);
 
 app.listen(5002, () => console.log('Admin server on 5002'));
