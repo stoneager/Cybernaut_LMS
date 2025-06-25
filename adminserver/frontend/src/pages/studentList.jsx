@@ -34,7 +34,7 @@ export default function StudentList() {
   };
 
   return (
-    <Sidebar>
+    
       <div className="p-8 bg-gray-50 min-h-screen">
         <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
 
@@ -88,6 +88,6 @@ export default function StudentList() {
           </div>
         )}
       </div>
-    </Sidebar>
+    
   );
 }

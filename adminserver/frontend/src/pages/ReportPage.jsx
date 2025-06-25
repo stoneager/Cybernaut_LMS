@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import AdminLayout from "../components/AdminLayout";
 import { useParams } from "react-router-dom";
-import API from "../api";
+import axios from "axios";
 
 const ReportPage = () => {
-  const { batchId } = useParams(); // <-- ✅ Get batchId from URL
+  const { batchId } = useParams();
   const [search, setSearch] = useState("");
   const [selectedDay, setSelectedDay] = useState("All");
-  const [selectedType, setSelectedType] = useState("All");
+  const [selectedModule, setSelectedModule] = useState("All");
   const [reports, setReports] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchReports();
@@ -17,8 +18,12 @@ const ReportPage = () => {
 
   const fetchReports = async () => {
     try {
-      
-      const res = await API.get(`/reports/batch/${batchId}`);
+      const res = await axios.get(`http://localhost:5002/api/reports/batch/${batchId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: true
+      });
       setReports(res.data);
     } catch (err) {
       console.error("Error fetching reports", err);
@@ -26,18 +31,19 @@ const ReportPage = () => {
   };
 
   const days = ["All", ...Array.from(new Set(reports.map((r) => `Day ${r.day}`)))];
-  const quizTypes = ["All", ...Array.from(new Set(reports.map((r) => r.quizType)))];
+  const moduleOptions = ["All", ...Array.from(new Set(reports.map((r) => r.module)))];
 
   const filtered = reports.filter((s) => {
     const studentName = s.student?.user?.name || "Unknown";
     const matchesName = studentName.toLowerCase().includes(search.toLowerCase());
     const matchesDay = selectedDay === "All" || `Day ${s.day}` === selectedDay;
-    const matchesType = selectedType === "All" || s.quizType === selectedType;
-    return matchesName && matchesDay && matchesType;
+    const matchesModule = selectedModule === "All" || s.module === selectedModule;
+
+    return matchesName && matchesDay && matchesModule;
   });
 
   return (
-    <AdminLayout>
+      <div>
       {/* Search */}
       <div className="flex items-center mt-6 mb-4">
         <div className="relative w-full max-w-xl mx-auto">
@@ -68,14 +74,14 @@ const ReportPage = () => {
         </div>
 
         <div>
-          <label className="block mb-1 text-sm font-semibold text-gray-700">Select Type:</label>
+          <label className="block mb-1 text-sm font-semibold text-gray-700">Filter Module:</label>
           <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
+            value={selectedModule}
+            onChange={(e) => setSelectedModule(e.target.value)}
             className="border rounded-lg px-4 py-2 text-gray-700 shadow-sm"
           >
-            {quizTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
+            {moduleOptions.map((module) => (
+              <option key={module} value={module}>{module}</option>
             ))}
           </select>
         </div>
@@ -88,30 +94,35 @@ const ReportPage = () => {
             <thead className="bg-gradient-to-r from-[#00a3ff] via-[#12d8fa] to-[#13d8fb] text-white">
               <tr>
                 <th className="p-4 text-left font-semibold">Student Name</th>
-                <th className="p-4 text-left font-semibold">Quiz Type</th>
+                <th className="p-4 text-left font-semibold">Module</th>
                 <th className="p-4 text-left font-semibold">Day</th>
-                <th className="p-4 text-left font-semibold">Marks</th>
+                <th className="p-4 text-left font-semibold">Quiz</th>
+                <th className="p-4 text-left font-semibold">Coding</th>
+                <th className="p-4 text-left font-semibold">Assignment</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length > 0 ? (
                 filtered.map((s, idx) => {
                   const studentName = s.student?.user?.name || "Unknown";
+                  const [quiz, coding, assignment] = s.marksObtained || [0, 0, 0];
                   return (
                     <tr
                       key={idx}
                       className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 transition`}
                     >
                       <td className="p-4 font-medium">{studentName}</td>
-                      <td className="p-4 text-blue-600 font-semibold">{s.quizType}</td>
+                      <td className="p-4 font-semibold">{s.module}</td>
                       <td className="p-4">{`Day ${s.day}`}</td>
-                      <td className="p-4 font-semibold">{s.marksObtained}</td>
+                      <td className="p-4 font-semibold">{quiz}</td>
+                      <td className="p-4 font-semibold">{coding}</td>
+                      <td className="p-4 font-semibold">{assignment}</td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-gray-500">
+                  <td colSpan="6" className="text-center py-6 text-gray-500">
                     No matching records found.
                   </td>
                 </tr>
@@ -120,7 +131,7 @@ const ReportPage = () => {
           </table>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

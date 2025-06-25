@@ -105,13 +105,33 @@ app.get('/chatrooms/:course/:batch/:module/students', (req, res) => {
   res.json(students);
 });
 
+// ✅ Get list of students under a specific admin in a batch
+app.get('/chatrooms/:course/:batch/admins/:admin/students', (req, res) => {
+  const { course, batch, admin } = req.params;
+  const adminName = encodeURIComponent(admin.trim());
+  const dirPath = path.join(LOG_DIR, course, batch, 'admins', adminName,'students');
+  console.log(dirPath);
+  if (!fs.existsSync(dirPath)) {
+    console.log("Empty");
+    return res.json([]);
+  }
+
+  const students = fs.readdirSync(dirPath)
+    .filter(file => file.endsWith('.txt'))
+    .map(file => file.replace('.txt', ''));
+  console.log("Students : "+students);
+  res.json(students);
+});
+
+
 app.get('/chatrooms/metadata/:batch', (req, res) => {
   const raw = req.params.batch;
   const batch = decodeBatch(raw); // Decode URL-encoded string like "Full%20Stack%20Development"
-  console.log("hello");
+  
   try {
     const courseDirs = fs.readdirSync(path.join(LOG_DIR));
     for (const course of courseDirs) {
+      
       const coursePath = path.join(LOG_DIR, course);
       if (!fs.statSync(coursePath).isDirectory()) continue;
 
@@ -123,7 +143,7 @@ app.get('/chatrooms/metadata/:batch', (req, res) => {
               fs.statSync(path.join(forumPath, mod)).isDirectory()
             )
           : [];
-
+        console.log({course,modules});
         return res.json({ course, modules });
       }
     }
@@ -135,18 +155,31 @@ app.get('/chatrooms/metadata/:batch', (req, res) => {
   }
 });
 
+app.get('/chatrooms/admins', (req, res) => {
+
+  const dirPath = path.join(LOG_DIR, 'admins');
+
+  if (!fs.existsSync(dirPath)) {
+    return res.json([]);
+  }
+
+  const files = fs.readdirSync(dirPath)
+    .filter(file => file.endsWith('.txt'))
+    .map(file => file.replace('.txt', ''));
+  res.json(files);
+});
+
 // ✅ Get batches inside a course
 app.get('/chatrooms/:course', (req, res) => {
   const course = decodeURIComponent(req.params.course);
   const coursePath = path.join(LOG_DIR, course);
-
+  
   if (!fs.existsSync(coursePath)) return res.status(404).json([]);
 
   const batches = fs.readdirSync(coursePath).filter(entry => {
     const fullPath = path.join(coursePath, entry);
     return fs.statSync(fullPath).isDirectory();
   });
-
   res.json(batches);
 });
 
@@ -161,18 +194,6 @@ app.get('/chatrooms', (req, res) => {
 
   res.json(batches);
 });
-
-app.get('/chatrooms/admins', (req, res) => {
-  const dirPath = path.join(LOG_DIR, 'admins');
-  if (!fs.existsSync(dirPath)) return res.json([]);
-
-  const files = fs.readdirSync(dirPath)
-    .filter(file => file.endsWith('.txt'))
-    .map(file => file.replace('.txt', ''));
-
-  res.json(files);
-});
-
 
 
 

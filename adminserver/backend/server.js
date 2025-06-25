@@ -12,6 +12,9 @@ const adminEvaluation = require("./routes/adminEvaluation");
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const uploadRoutes = require('./routes/upload'); // adjust path
 const adminDashboard = require('./routes/adminDasboard');
+const studentRoutes = require('./routes/studentRoutes.js');
+const statisticsRoutes = require("./routes/statisticsRoutes");
+const settingsRoutes = require('./routes/settingsRoute.js');
 
 const app = express();
 app.use(cors({
@@ -37,5 +40,8 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/evaluation", adminEvaluation);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/dashboard',adminDashboard);
+app.use("/api/students", studentRoutes);
+app.use('/api/settings',settingsRoutes);
+app.use("/statistics", statisticsRoutes);
 
 app.listen(5002, () => console.log('Admin server on 5002'));

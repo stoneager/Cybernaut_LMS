@@ -6,9 +6,8 @@ const reportSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  quizType: {
+  moduleName: {
     type: String,
-    enum: ['Quiz', 'Coding', 'Assignment'],
     required: true
   },
   day: {
@@ -16,8 +15,14 @@ const reportSchema = new mongoose.Schema({
     required: true
   },
   marksObtained: {
-    type: Number,
-    required: true
+    type: [Number],
+    default: [-1, -1, -1],
+    validate: {
+      validator: function (v) {
+        return v.length === 3;
+      },
+      message: "marksObtained must be an array of 3 numbers"
+    }
   },
   createdAt: {
     type: Date,

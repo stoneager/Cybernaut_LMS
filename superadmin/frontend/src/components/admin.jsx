@@ -141,6 +141,7 @@ export default function Admins() {
                 setShowModal(false);
                 setIsEditing(false);
                 setEditingId(null);
+                setFormData({ name: '', email: '', phone: '', salary: '', specialisation: '', upi: '', dob: '' });
                 }} className="text-gray-600 text-lg">×</button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">

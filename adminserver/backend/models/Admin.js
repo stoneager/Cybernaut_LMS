@@ -8,6 +8,7 @@ const adminSchema = new mongoose.Schema({
   specialisation: [String],
   upi: String,
   paidForMonth: Number,
+  department: String,
   lastOrderId: { type: String },
   lastPaymentId: { type: String },
   invoiceId : {type : String},

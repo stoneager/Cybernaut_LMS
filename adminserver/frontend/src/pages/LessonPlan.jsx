@@ -109,7 +109,7 @@ export default function LessonPlan() {
   if (!module) return null;
 
   return (
-  <AdminLayout>
+  
     <div className="max-w-5xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -241,7 +241,7 @@ export default function LessonPlan() {
         </div>
       )}
     </div>
-  </AdminLayout>
+
 );
 
 }

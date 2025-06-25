@@ -156,14 +156,9 @@ const noNotesAvailable = Object.keys(notesMap).length > 0 && !activeModule;
           onClick={() => navigate(`/student/chat?type=forum&batch=${batch._id}&module=${encodeURIComponent(activeModule)}`)}
           className="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition"
         >
-          Group Chat
+          Chat 
         </button>
-        <button
-          onClick={() => navigate(`/student/chat?type=admin&batch=${batch._id}&module=${encodeURIComponent(activeModule)}`)}
-          className="bg-gray-600 text-white px-4 py-2 rounded-md shadow hover:bg-gray-700 transition"
-        >
-          Chat with Admin
-        </button>
+        
       </div>
 
       {/* Notes for active module only */}
