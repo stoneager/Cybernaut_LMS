@@ -1,58 +1,52 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import AdminLayout from '../components/AdminLayout';
-
 export default function LessonPlan() {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
   const [pdfFile, setPdfFile] = useState(null);
   const [adminId, setAdminId] = useState(null);
+  const [modules, setModules] = useState([]);
+  const [selectedModule, setSelectedModule] = useState('');
   const [notes, setNotes] = useState([]);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modules, setModules] = useState([]); // all modules this admin teaches
-  const [selectedModule, setSelectedModule] = useState(''); // current selected module
-
 
   const [batchDetails, setBatchDetails] = useState({});
   const backendBase = 'http://localhost:5002';
   const token = localStorage.getItem('token');
 
   const fetchBatchModule = useCallback(async () => {
-  try {
-    const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const batch = res.data;
-    setBatchDetails({ batchName: batch.batchName, courseName: batch.course.courseName });
+    try {
+      const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const batch = res.data;
+      setBatchDetails({ batchName: batch.batchName, courseName: batch.course.courseName });
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentAdminId = payload.id;
-    const adminModules = batch.admins.filter(a => a.admin === currentAdminId).map(a => a.module);
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentAdminId = payload.id;
+      const adminModules = batch.admins.filter(a => a.admin === currentAdminId).map(a => a.module);
 
-    if (!adminModules.length) return navigate('/unauthorized');
-    
-    setAdminId(currentAdminId);
-    setModules(adminModules);
-    setSelectedModule(adminModules[0]);
-  } catch (e) {
-    console.error(e);
-    window.location.href = 'http://localhost:3000/login';
-  }
-}, [batchId, navigate, token]);
+      if (!adminModules.length) return navigate('/unauthorized');
 
+      setAdminId(currentAdminId);
+      setModules(adminModules);
+      setSelectedModule(adminModules[0]);
+    } catch (e) {
+      console.error(e);
+      navigate('/login');
+    }
+  }, [batchId, navigate, token]);
 
   const fetchNotes = useCallback(async () => {
     if (!selectedModule) return;
-
     try {
       const res = await axios.get(`${backendBase}/notes/${batchId}/${selectedModule}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Sort by day descending: latest first
-      const sorted = res.data.sort((a,b) => b.day - a.day);
+      const sorted = res.data.sort((a, b) => b.day - a.day);
       setNotes(sorted);
     } catch (e) { console.error(e); }
   }, [batchId, selectedModule, token]);
@@ -80,22 +74,44 @@ export default function LessonPlan() {
   const handleSubmit = async () => {
     if (!form.title || !form.day) return alert('Please fill title and day');
     try {
-      let assignmentFilePath = '';
+      let assignmentS3Url = '';
+
       if (pdfFile) {
         const fd = new FormData();
         fd.append('file', pdfFile);
-        await axios.post(
+
+        const uploadRes = await axios.post(
           `${backendBase}/upload-assignment?batch=${batchId}&module=${selectedModule}&title=${form.title}`,
-          fd, { headers: {'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`}}
+          fd,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
+        assignmentS3Url = uploadRes.data.s3path;
       }
-      const payload = { ...form, batch: batchId, module: selectedModule, admin: adminId, assignmentFilePath };
+
+      const payload = {
+        ...form,
+        batch: batchId,
+        module: selectedModule,
+        admin: adminId,
+        assignmentS3Url,
+      };
 
       if (editingNoteId) {
-        await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
-        await axios.post(`${backendBase}/notes`, payload, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.post(`${backendBase}/notes`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
+
       setShowModal(false);
       fetchNotes();
     } catch (e) {
@@ -104,36 +120,26 @@ export default function LessonPlan() {
     }
   };
 
-  const highlightNote = id => {
-    setNotes(notes => {
-      const idx = notes.findIndex(n => n._id === id);
-      if (idx <= 0) return notes;
-      const updated = [...notes];
-      const [moved] = updated.splice(idx,1);
-      updated.unshift(moved);
-      return updated;
-    });
-  };
-
+  if (!selectedModule) return null;
 
   return (
-  
     <div className="max-w-5xl mx-auto p-6">
+      {/* Module Filter */}
       {modules.length > 1 && (
-  <div className="flex gap-3 mb-4">
-    {modules.map((mod) => (
-      <button
-        key={mod}
-        onClick={() => setSelectedModule(mod)}
-        className={`px-4 py-1 rounded-full border ${
-          selectedModule === mod ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
-        }`}
-      >
-        {mod}
-      </button>
-    ))}
-  </div>
-)}
+        <div className="flex gap-3 mb-4">
+          {modules.map(mod => (
+            <button
+              key={mod}
+              onClick={() => setSelectedModule(mod)}
+              className={`px-4 py-1 rounded-full border ${
+                selectedModule === mod ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
+              }`}
+            >
+              {mod}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -150,56 +156,63 @@ export default function LessonPlan() {
         </button>
       </div>
 
-   {notes.length > 0 && (
-  <div className="bg-white shadow-md rounded-xl p-6 mb-6 border border-gray-200">
-    <div className="flex justify-between items-center mb-2">
-      <h3 className="text-xl font-semibold text-gray-800">
-        📘 Day {notes[0].day}: {notes[0].title}
-      </h3>
-      <a
-        href={notes[0].meetlink}
-        target="_blank"
-        rel="noreferrer"
-        className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full hover:bg-gray-700 transition"
-      >
-        Join Meeting
-      </a>
-    </div>
+      {/* Latest Note */}
+      {notes.length > 0 && (
+        <div className="bg-white shadow-md rounded-xl p-6 mb-6 border border-gray-200">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-xl font-semibold text-gray-800">
+              📘 Day {notes[0].day}: {notes[0].title}
+            </h3>
+            <a
+              href={notes[0].meetlink}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full hover:bg-gray-700 transition"
+            >
+              Join Meeting
+            </a>
+          </div>
 
-    <div className="space-y-1 text-sm text-gray-700 mt-2">
-      <p>📝 Quiz: <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Take Quiz</a></p>
-      {notes[0].assignmentlink && (
-        <p>🔗 Assignment: <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="text-green-600 hover:underline">View</a></p>
-      )}
-      {notes[0].assignmentFilePath && (
-        <p>📄 PDF: <a href={notes[0].assignmentFilePath} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Download</a></p>
-      )}
-    </div>
+          <div className="space-y-1 text-sm text-gray-700 mt-2">
+            <p>📝 Quiz: <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">Take Quiz</a></p>
+            {notes[0].assignmentlink && (
+              <p>🔗 Assignment: <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="text-green-600 hover:underline">View</a></p>
+            )}
+            {notes[0].assignmentS3Url && (
+              <p>📄 PDF: <a href={notes[0].assignmentS3Url} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Download</a></p>
+            )}
+            <button
+              onClick={() => navigate(`/evaluate/${batchId}/${selectedModule}/${encodeURIComponent(notes[0].title)}/${notes[0].day}`)}
+              className="text-sm text-green-700 hover:underline ml-4"
+            >
+              🧪 Evaluate
+            </button>
+          </div>
 
-    <button
-      onClick={() => openModalForEdit(notes[0])}
-      className="mt-3 text-sm text-blue-600 hover:underline"
-    >
-      ✏️ Edit
-    </button>
-  </div>
-)}
+          <button
+            onClick={() => openModalForEdit(notes[0])}
+            className="mt-3 text-sm text-blue-600 hover:underline"
+          >
+            ✏️ Edit
+          </button>
+        </div>
+      )}
 
       {/* Older Notes */}
       <div className="space-y-4">
-        {notes.slice(1).map((note) => (
+        {notes.slice(1).map(note => (
           <div
             key={note._id}
             className="bg-white border hover:shadow-md cursor-pointer transition-all p-4 rounded-lg"
             onClick={() => {
-              setNotes((prev) => {
+              setNotes(prev => {
                 const updated = [...prev];
-                const idx = updated.findIndex((n) => n._id === note._id);
+                const idx = updated.findIndex(n => n._id === note._id);
                 if (idx > -1) {
                   const [moved] = updated.splice(idx, 1);
                   updated.unshift(moved);
                 }
-                return [...updated];
+                return updated;
               });
             }}
           >
@@ -208,15 +221,26 @@ export default function LessonPlan() {
                 <p className="font-semibold text-gray-800">📘 Day {note.day}: {note.title}</p>
                 <p className="text-xs text-gray-500">Added on {new Date(note.createdAt).toLocaleDateString()}</p>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openModalForEdit(note);
-                }}
-                className="text-sm text-blue-700 underline"
-              >
-                ✏️ Edit
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openModalForEdit(note);
+                  }}
+                  className="text-sm text-blue-700 underline"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/evaluate/${batchId}/${selectedModule}/${encodeURIComponent(note.title)}/${note.day}`);
+                  }}
+                  className="text-sm text-green-600 hover:underline"
+                >
+                  🧪 Evaluate
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -235,7 +259,6 @@ export default function LessonPlan() {
             <h3 className="text-2xl font-bold mb-4 text-blue-900">
               {editingNoteId ? 'Edit Note' : 'Add Note'} – {selectedModule}
             </h3>
-
 
             <div className="space-y-4">
               <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title}
@@ -266,7 +289,5 @@ export default function LessonPlan() {
         </div>
       )}
     </div>
-
-);
-
+  );
 }

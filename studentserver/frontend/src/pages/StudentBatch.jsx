@@ -11,7 +11,6 @@ export default function StudentBatch() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Loading");
     const fetchStudent = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -19,13 +18,11 @@ export default function StudentBatch() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStudent(res.data);
-        console.log("Gotcha : "+res.data);
       } catch (err) {
         console.error(err);
         navigate('/');
       }
     };
-
     fetchStudent();
   }, [navigate]);
 
@@ -70,95 +67,74 @@ export default function StudentBatch() {
     if (batchId) fetchBatch();
   }, [batchId]);
 
-  const renderNoteCard = (note, student, batchId, module, large = false) => (
-  <div
-    key={note._id}
-    className={`bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col ${large ? 'lg:col-span-3' : ''}`}
-  >
-    <h4 className="text-lg font-semibold text-gray-800 mb-2">{note.title}</h4>
+  const renderNoteCard = (note, student, batchId, module, large = false) => {
+    const viewAssignment = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5002/assignment-question/${encodeURIComponent(batch.batchName)}/${encodeURIComponent(module)}/${encodeURIComponent(note.title)}`);
+        if (res.data?.url) {
+          window.open(res.data.url, '_blank');
+        } else {
+          alert("Assignment link not found");
+        }
+      } catch (err) {
+        console.error("Error fetching assignment link:", err);
+        alert("Failed to fetch assignment link");
+      }
+    };
 
-    <p className="text-sm text-gray-600 mb-1">
-      Meet:&nbsp;
-      {note.meetlink ? (
-        <a
-          href={note.meetlink}
-          target="_blank"
-          rel="noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          Open Meet
-        </a>
-      ) : (
-        <span className="text-gray-400 italic">Not Provided</span>
-      )}
-    </p>
-
-    <p className="text-sm text-gray-600 mb-1">
-      Quiz:&nbsp;
-      {note.quizlink ? (
-        <a
-          href={note.quizlink}
-          target="_blank"
-          rel="noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          Take Quiz
-        </a>
-      ) : (
-        <span className="text-gray-400 italic">Not Provided</span>
-      )}
-    </p>
-
-    <p className="text-sm text-gray-600 mb-2">
-      Assignment:&nbsp;
-      {note.assignmentlink ? (
-        <a
-          href={note.assignmentlink}
-          target="_blank"
-          rel="noreferrer"
-          className="text-purple-600 hover:underline"
-        >
-          View Assignment
-        </a>
-      ) : (
-        <span className="text-gray-400 italic">Not Provided</span>
-      )}
-    </p>
-
-    <div className="mt-auto flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-      <input
-        type="file"
-        accept="application/pdf"
-        onChange={e => note.file = e.target.files[0]}
-        className="w-full sm:flex-1 text-sm border border-gray-300 rounded-md px-2 py-1"
-      />
-      <button
-        onClick={() => {
-          if (!note.file) return alert('Choose a PDF');
-          const fd = new FormData();
-          fd.append('file', note.file);
-          axios.post(
-            `http://localhost:5003/notes/upload/${batchId}/${module}/${encodeURIComponent(note.title)}/${encodeURIComponent(student.name)}`,
-            fd
-          ).then(() => alert('Answer uploaded')).catch(console.error);
-        }}
-        className="w-full sm:w-auto bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition text-sm"
+    return (
+      <div
+        key={note._id}
+        className={`bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col ${large ? 'lg:col-span-3' : ''}`}
       >
-        Upload Answer
-      </button>
-    </div>
-  </div>
+        <h4 className="text-lg font-semibold text-gray-800 mb-2">{note.title}</h4>
+        <p className="text-sm text-gray-600 mb-1">
+          Meet: <a href={note.meetlink} className="text-blue-600 hover:underline break-all">{note.meetlink}</a>
+        </p>
+        <p className="text-sm text-gray-600 mb-1">
+          Quiz: <a href={note.quizlink} className="text-blue-600 hover:underline break-all">{note.quizlink}</a>
+        </p>
 
-  );
+        {/* View Assignment Button */}
+        <button
+          onClick={viewAssignment}
+          className="mb-2 text-sm text-purple-700 underline hover:text-purple-900 text-left"
+        >
+          📄 View Assignment
+        </button>
+
+        {/* Upload Answer */}
+        <div className="mt-auto flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={e => note.file = e.target.files[0]}
+            className="w-full sm:flex-1 text-sm border border-gray-300 rounded-md px-2 py-1"
+          />
+          <button
+            onClick={() => {
+              if (!note.file) return alert('Choose a PDF');
+              const fd = new FormData();
+              fd.append('file', note.file);
+              axios.post(
+                `http://localhost:5002/notes/upload/${encodeURIComponent(batch.batchName)}/${module}/${encodeURIComponent(note.title)}/${encodeURIComponent(student.user.name)}`,
+                fd
+              ).then(() => alert('Answer uploaded')).catch(console.error);
+            }}
+            className="w-full sm:w-auto bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition text-sm"
+          >
+            Upload Answer
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   if (!student || !batch) {
-  return <p className="text-center text-gray-500 mt-6">Loading...</p>;
-}
+    return <p className="text-center text-gray-500 mt-6">Loading...</p>;
+  }
 
-// ✅ If there are no notes at all, show default UI with no activeModule
-const noNotesAvailable = Object.keys(notesMap).length > 0 && !activeModule;
-
-
+  const noNotesAvailable = Object.keys(notesMap).length > 0 && !activeModule;
   const currentModuleNotes = notesMap[activeModule] || { today: [], others: [] };
 
   return (
@@ -175,79 +151,73 @@ const noNotesAvailable = Object.keys(notesMap).length > 0 && !activeModule;
         </button>
       </div>
 
-      {/* Module Selector Tabs */}
+      {/* Module Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {Object.keys(notesMap).map(module => (
           <button
             key={module}
             onClick={() => setActiveModule(module)}
-            className={`px-4 py-2 rounded-full border ${
-              module === activeModule ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'
-            }`}
+            className={`px-4 py-2 rounded-full border ${module === activeModule ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
           >
             {module}
           </button>
         ))}
       </div>
 
-      {/* Chat Buttons */}
+      {/* Chat Button */}
       <div className="flex gap-4 mb-6">
         <button
           onClick={() => navigate(`/student/chat?type=forum&batch=${batch._id}&module=${encodeURIComponent(activeModule)}`)}
           className="bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition"
         >
-          Chat 
+          Chat
         </button>
-        
       </div>
 
-      {/* Notes for active module only */}
-      {/* Notes Section */}
-{noNotesAvailable ? (
-  <div className="mb-8">
-    {Object.keys(notesMap).map(module => (
-      <div key={module} className="mb-6">
-        <h3 className="text-xl font-semibold text-purple-700 mb-2">{module}</h3>
-        <p className="text-sm text-gray-500">No notes yet.</p>
-      </div>
-    ))}
-  </div>
-) : (
-  <div key={activeModule} className="mb-8">
-    <h3 className="text-xl font-semibold mb-3 text-purple-700">{activeModule}</h3>
+      {/* Notes */}
+      {noNotesAvailable ? (
+        <div className="mb-8">
+          {Object.keys(notesMap).map(module => (
+            <div key={module} className="mb-6">
+              <h3 className="text-xl font-semibold text-purple-700 mb-2">{module}</h3>
+              <p className="text-sm text-gray-500">No notes yet.</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div key={activeModule} className="mb-8">
+          <h3 className="text-xl font-semibold mb-3 text-purple-700">{activeModule}</h3>
 
-    {currentModuleNotes.today.length === 0 && currentModuleNotes.others.length === 0 ? (
-      <p className="text-gray-500 text-sm">No notes uploaded.</p>
-    ) : (
-      <>
-        {currentModuleNotes.today.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-md font-semibold text-green-600 mb-2">Today's Notes</h4>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {currentModuleNotes.today.map(note => (
-                <div key={note._id} className="col-span-1 lg:col-span-3">
-                  {renderNoteCard(note, student, batchId, activeModule, true)}
+          {currentModuleNotes.today.length === 0 && currentModuleNotes.others.length === 0 ? (
+            <p className="text-gray-500 text-sm">No notes uploaded.</p>
+          ) : (
+            <>
+              {currentModuleNotes.today.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-md font-semibold text-green-600 mb-2">Today's Notes</h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {currentModuleNotes.today.map(note => (
+                      <div key={note._id} className="col-span-1 lg:col-span-3">
+                        {renderNoteCard(note, student, batchId, activeModule, true)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {currentModuleNotes.others.length > 0 && (
-          <div>
-            <h4 className="text-md font-semibold text-gray-600 mb-2">Previous Notes</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentModuleNotes.others.map(note =>
-                renderNoteCard(note, student, batchId, activeModule)
               )}
-            </div>
-          </div>
-        )}
-      </>
-    )}
-  </div>
-)}
-
+              {currentModuleNotes.others.length > 0 && (
+                <div>
+                  <h4 className="text-md font-semibold text-gray-600 mb-2">Previous Notes</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentModuleNotes.others.map(note =>
+                      renderNoteCard(note, student, batchId, activeModule)
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -16,7 +16,17 @@ router.get('/:batchId/:module', async (req, res) => {
 
 // ✅ POST new note
 router.post('/', async (req, res) => {
-  const { title, meetlink, quizlink, assignmentlink, assignmentFilePath, batch, module, admin, day } = req.body;
+  const {
+    title,
+    meetlink,
+    quizlink,
+    assignmentlink,
+    assignmentS3Url, // ✅ S3 URL added
+    batch,
+    module,
+    admin,
+    day
+  } = req.body;
 
   try {
     const note = new Note({
@@ -24,7 +34,7 @@ router.post('/', async (req, res) => {
       meetlink,
       quizlink,
       assignmentlink,
-      assignmentFilePath,
+      assignmentS3Url, // ✅ Store S3 URL
       batch,
       module,
       admin,
@@ -40,8 +50,35 @@ router.post('/', async (req, res) => {
 
 // ✅ PUT to edit note
 router.put('/:id', async (req, res) => {
+  const {
+    title,
+    meetlink,
+    quizlink,
+    assignmentlink,
+    assignmentS3Url, // ✅ S3 URL update
+    batch,
+    module,
+    admin,
+    day
+  } = req.body;
+
   try {
-    const updatedNote = await Note.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedNote = await Note.findByIdAndUpdate(
+      req.params.id,
+      {
+        title,
+        meetlink,
+        quizlink,
+        assignmentlink,
+        assignmentS3Url, // ✅ Update S3 URL
+        batch,
+        module,
+        admin,
+        day
+      },
+      { new: true }
+    );
+
     if (!updatedNote) return res.status(404).json({ message: 'Note not found' });
     res.json(updatedNote);
   } catch (err) {

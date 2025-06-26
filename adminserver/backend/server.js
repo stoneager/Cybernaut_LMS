@@ -17,11 +17,22 @@ const statisticsRoutes = require("./routes/statisticsRoutes");
 const settingsRoutes = require('./routes/settingsRoute.js');
 
 const app = express();
-app.use(cors({
-  origin: 'http://localhost:3002', // specific origin
-  credentials: true                // allow credentials (cookies, auth headers, etc.)
-}));
+const allowedOrigins = [
+  'http://localhost:3002',
+  'http://localhost:3003'
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

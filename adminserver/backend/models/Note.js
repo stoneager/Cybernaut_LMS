@@ -5,7 +5,7 @@ const noteSchema = new mongoose.Schema({
   meetlink: String,
   quizlink: String,
   assignmentlink: String,
-  assignmentFilePath: String,
+  assignmentS3Url: { type: String, default: "" },
   batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },
   module: { type: String, required: true },
   admin: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

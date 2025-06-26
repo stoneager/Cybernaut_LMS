@@ -6,7 +6,7 @@ const reportSchema = new mongoose.Schema({
     ref: 'Student',
     required: true
   },
-  moduleName: {
+  module: {
     type: String,
     required: true
   },
