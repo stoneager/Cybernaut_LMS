@@ -58,7 +58,7 @@ router.post('/upload-assignment', upload.single('file'), async (req, res) => {
     );
 
     const s3Url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    console.log("✅ Uploaded to S3:", s3Url);
+    
 
     res.json({
       message: 'Assignment uploaded directly to S3 successfully',
@@ -136,7 +136,7 @@ router.get('/evaluate/:batchId/:module/:title/:day', async (req, res) => {
         .map(k => decodeURIComponent(k.split('/')[4])) // folder name = real student name
     )];
 
-    console.log("THE STUDENTS NAME SHIT:",studentNames);
+    
 
     // 4. Get corresponding student documents
     const students = await Student.find()
@@ -144,7 +144,7 @@ router.get('/evaluate/:batchId/:module/:title/:day', async (req, res) => {
   .then(res =>
     res.filter(stu => studentNames.includes(stu.user?.name))
   );
-    console.log("THE STUDENTS SHIT:",students);
+    
     const pending = [];
 
     for (const student of students) {
@@ -198,7 +198,7 @@ router.post('/evaluate', async (req, res) => {
 
     report.marksObtained[2] = mark;
     await report.save();
-
+   
     res.json({ message: "Marks updated successfully" });
   } catch (err) {
     console.error("Error saving marks:", err);
