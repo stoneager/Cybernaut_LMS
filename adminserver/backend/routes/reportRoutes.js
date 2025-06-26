@@ -85,6 +85,7 @@ router.get('/batch/:batchId', Verify, async (req, res) => {
     const studentIds = await Student.find({ batch: batchId }).distinct('_id');
     if (studentIds.length === 0) return res.json([]);
 
+
     const reports = await Report.find({
       student: { $in: studentIds },
       module: { $in: modulesHandled }
@@ -94,7 +95,6 @@ router.get('/batch/:batchId', Verify, async (req, res) => {
         populate: { path: 'user', select: 'name' }
       })
       .sort({ createdAt: -1 });
-
     res.json(reports);
   } catch (err) {
     console.error('❌ Error fetching reports:', err);

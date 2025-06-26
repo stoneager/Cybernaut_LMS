@@ -90,7 +90,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/batch/:batchId/evaluation"
+          path="/evaluate/:batch/:module/:title/:day"
           element={
             <PrivateRoute>
               <Sidebar>

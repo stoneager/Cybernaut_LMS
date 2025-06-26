@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [selectedModule, setSelectedModule] = useState(null);
   const [availableModules, setAvailableModules] = useState([]);
+  const [selectedType, setSelectedType] = useState("Assignment"); // New
 
   const token = localStorage.getItem("token");
 
@@ -58,9 +59,10 @@ useEffect(() => {
 }, [selectedBatchId, data, selectedModule]);
 
 
+// Update fetch effect
 useEffect(() => {
-  if (selectedBatchId && selectedModule) {
-    axios.get(`http://localhost:5002/statistics/assignments?batchId=${selectedBatchId}&module=${selectedModule}`, {
+  if (selectedBatchId && selectedModule && selectedType) {
+    axios.get(`http://localhost:5002/statistics/marks?batchId=${selectedBatchId}&module=${selectedModule}&type=${selectedType}`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     }).then(res => {
@@ -69,7 +71,8 @@ useEffect(() => {
       console.error("Error fetching assignment stats:", err);
     });
   }
-}, [selectedBatchId, selectedModule]);
+}, [selectedBatchId, selectedModule, selectedType]);
+
 
 
   if (!data) return <div className="p-8">Loading dashboard...</div>;
@@ -106,78 +109,95 @@ const { stats, batches } = data;
         </div>
       </div>
 
-      {/* Assignment Submission Graph */}
-      <div className="bg-white p-6 rounded-xl shadow-md border mb-10">
-  <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-    <h3 className="text-lg font-semibold text-blue-900">Assignment Submissions</h3>
-
-    <div className="flex gap-3">
-      {/* Batch Selector */}
-      <select
-        value={selectedBatchId}
-        onChange={(e) => setSelectedBatchId(e.target.value)}
-        className="border rounded px-2 py-1 text-sm"
-      >
-        {batches.map((batch) => (
-          <option key={batch._id} value={batch._id}>
-            {batch.batchName} ({batch.courseName})
-          </option>
-        ))}
-      </select>
-
-      {/* Module Selector */}
-      {availableModules.length > 1 && (
-        <select
-          value={selectedModule}
-          onChange={(e) => setSelectedModule(e.target.value)}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          {availableModules.map((mod, i) => (
-            <option key={i} value={mod}>{mod}</option>
-          ))}
-        </select>
-      )}
-    </div>
-  </div>
-
-  <ResponsiveContainer width="100%" height={300}>
-    <BarChart
-      data={assignmentStats}
-      barCategoryGap={assignmentStats.length < 10 ? "30%" : "10%"}
-    >
-      <XAxis dataKey="day" label={{ value: "Day", position: "insideBottomRight", offset: -5 }} />
-      <YAxis allowDecimals={false} />
-      <Tooltip />
-      <CartesianGrid strokeDasharray="3 3" />
-      <Bar dataKey="count" fill="#6366F1" />
-    </BarChart>
-  </ResponsiveContainer>
-</div>
-
 
       {/* Batch Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-md border">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">My Batches</h3>
-          <ul>
-            {batches.map((batch) => (
-              <li key={batch._id} className="mb-4">
-                <div className="text-gray-800 font-medium">
-                  {batch.courseName} - {batch.batchName}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Modules:{" "}
-                  <span className="text-gray-700 font-semibold">
-                    {Array.isArray(batch.modulesHandled) && batch.modulesHandled.length > 0
-                      ? batch.modulesHandled.join(", ")
-                      : "None"}
-                  </span>
-                </div>
-              </li>
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+  {/* Chart - spans 2 columns on large screens */}
+  <div className="bg-white p-6 rounded-xl shadow-md border lg:col-span-2">
+    <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+      <h3 className="text-lg font-semibold text-blue-900">Submission Stats</h3>
+
+      <div className="flex gap-3">
+        {/* Batch Selector */}
+        <select
+          value={selectedBatchId}
+          onChange={(e) => setSelectedBatchId(e.target.value)}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          {batches.map((batch) => (
+            <option key={batch._id} value={batch._id}>
+              {batch.batchName} ({batch.courseName})
+            </option>
+          ))}
+        </select>
+
+        {/* Module Selector */}
+        {availableModules.length > 1 && (
+          <select
+            value={selectedModule}
+            onChange={(e) => setSelectedModule(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            {availableModules.map((mod, i) => (
+              <option key={i} value={mod}>{mod}</option>
             ))}
-          </ul>
-        </div>
+          </select>
+        )}
+
+        {/* Type Selector */}
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="Assignment">Assignment</option>
+          <option value="Coding">Coding</option>
+          <option value="Quiz">Quiz</option>
+        </select>
       </div>
+    </div>
+
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart
+        data={assignmentStats}
+        barCategoryGap={assignmentStats.length < 10 ? "30%" : "10%"}
+      >
+        <XAxis dataKey="day" label={{ value: "Day", position: "insideBottomRight", offset: -5 }} />
+        <YAxis allowDecimals={false} />
+        <Tooltip />
+        <CartesianGrid strokeDasharray="3 3" />
+        <Bar dataKey="count" fill="#6366F1" />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+
+  {/* My Batches - sits right */}
+  <div className="bg-white p-6 rounded-xl shadow-md border">
+    <h3 className="text-lg font-semibold text-blue-900 mb-4">My Batches</h3>
+    <ul className="space-y-4">
+  {batches.map((batch) => (
+    <li
+      key={batch._id}
+      className="rounded-xl border-l-4 border-blue-500 bg-gray-50 hover:bg-blue-50 transition-all duration-200 shadow-sm p-4"
+    >
+      <div className="text-lg font-semibold text-blue-800">
+        {batch.courseName} - {batch.batchName}
+      </div>
+      <div className="text-sm text-gray-600 mt-1">
+        <span className="font-medium text-gray-700">Modules:</span>{" "}
+        <span className="text-gray-800">
+          {Array.isArray(batch.modulesHandled) && batch.modulesHandled.length > 0
+            ? batch.modulesHandled.join(", ")
+            : "None"}
+        </span>
+      </div>
+    </li>
+  ))}
+</ul>
+
+  </div>
+</div>
     </div>
   );
 }
