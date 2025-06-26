@@ -39,6 +39,7 @@ router.post('/upload-assignment', upload.single('file'), (req, res) => {
 
   const relativePath = `/uploads/${cleanBatch}/${cleanModule}/${cleanTitle}/assignment/question.pdf`;
 
+  console.log("FUCK");
   res.json({ message: 'Assignment uploaded successfully', path: relativePath });
 });
 
