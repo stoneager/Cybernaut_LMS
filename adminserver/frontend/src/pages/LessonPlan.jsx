@@ -9,45 +9,53 @@ export default function LessonPlan() {
   const [form, setForm] = useState({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
   const [pdfFile, setPdfFile] = useState(null);
   const [adminId, setAdminId] = useState(null);
-  const [module, setModule] = useState('');
   const [notes, setNotes] = useState([]);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [modules, setModules] = useState([]); // all modules this admin teaches
+  const [selectedModule, setSelectedModule] = useState(''); // current selected module
+
 
   const [batchDetails, setBatchDetails] = useState({});
   const backendBase = 'http://localhost:5002';
   const token = localStorage.getItem('token');
 
   const fetchBatchModule = useCallback(async () => {
-    try {
-      const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const batch = res.data;
-      setBatchDetails({ batchName: batch.batchName, courseName: batch.course.courseName });
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentAdminId = payload.id;
-      const adminEntry = batch.admins.find(a => a.admin === currentAdminId);
-      if (!adminEntry) return navigate('/unauthorized');
-      setAdminId(currentAdminId);
-      setModule(adminEntry.module);
-    } catch (e) {
-      console.error(e);
-      navigate('/login');
-    }
-  }, [batchId, navigate, token]);
+  try {
+    const res = await axios.get(`${backendBase}/api/admin-batches/${batchId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const batch = res.data;
+    setBatchDetails({ batchName: batch.batchName, courseName: batch.course.courseName });
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentAdminId = payload.id;
+    const adminModules = batch.admins.filter(a => a.admin === currentAdminId).map(a => a.module);
+
+    if (!adminModules.length) return navigate('/unauthorized');
+    
+    setAdminId(currentAdminId);
+    setModules(adminModules);
+    setSelectedModule(adminModules[0]);
+  } catch (e) {
+    console.error(e);
+    window.location.href = 'http://localhost:3000/login';
+  }
+}, [batchId, navigate, token]);
+
 
   const fetchNotes = useCallback(async () => {
-    if (!module) return;
+    if (!selectedModule) return;
+
     try {
-      const res = await axios.get(`${backendBase}/notes/${batchId}/${module}`, {
+      const res = await axios.get(`${backendBase}/notes/${batchId}/${selectedModule}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Sort by day descending: latest first
       const sorted = res.data.sort((a,b) => b.day - a.day);
       setNotes(sorted);
     } catch (e) { console.error(e); }
-  }, [batchId, module, token]);
+  }, [batchId, selectedModule, token]);
 
   useEffect(() => { fetchBatchModule(); }, [fetchBatchModule]);
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
@@ -77,11 +85,12 @@ export default function LessonPlan() {
         const fd = new FormData();
         fd.append('file', pdfFile);
         await axios.post(
-          `${backendBase}/upload-assignment?batch=${batchId}&module=${module}&title=${form.title}`,
+          `${backendBase}/upload-assignment?batch=${batchId}&module=${selectedModule}&title=${form.title}`,
           fd, { headers: {'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`}}
         );
       }
-      const payload = { ...form, batch: batchId, module, admin: adminId, assignmentFilePath };
+      const payload = { ...form, batch: batchId, module: selectedModule, admin: adminId, assignmentFilePath };
+
       if (editingNoteId) {
         await axios.put(`${backendBase}/notes/${editingNoteId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       } else {
@@ -106,17 +115,32 @@ export default function LessonPlan() {
     });
   };
 
-  if (!module) return null;
 
   return (
   
     <div className="max-w-5xl mx-auto p-6">
+      {modules.length > 1 && (
+  <div className="flex gap-3 mb-4">
+    {modules.map((mod) => (
+      <button
+        key={mod}
+        onClick={() => setSelectedModule(mod)}
+        className={`px-4 py-1 rounded-full border ${
+          selectedModule === mod ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
+        }`}
+      >
+        {mod}
+      </button>
+    ))}
+  </div>
+)}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-blue-900">
           Lesson Plan – {batchDetails.batchName}
           <span className="text-gray-500 text-xl"> ({batchDetails.courseName})</span>
-          <span className="text-sm text-indigo-600 ml-2 font-medium">– Module: {module}</span>
+          <span className="text-sm text-indigo-600 ml-2 font-medium">– Module: {selectedModule}</span>
         </h2>
         <button
           className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-lg hover:shadow-md transition-all"
@@ -209,8 +233,9 @@ export default function LessonPlan() {
               ✕
             </button>
             <h3 className="text-2xl font-bold mb-4 text-blue-900">
-              {editingNoteId ? 'Edit Note' : 'Add Note'} – {module}
+              {editingNoteId ? 'Edit Note' : 'Add Note'} – {selectedModule}
             </h3>
+
 
             <div className="space-y-4">
               <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title}
