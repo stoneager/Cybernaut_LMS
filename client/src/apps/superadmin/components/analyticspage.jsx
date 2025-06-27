@@ -87,43 +87,8 @@ export default function AnalyticsPage() {
 
   return (
     <div className="ml-2 p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen text-black">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-          <h3 className="text-lg font-semibold text-blue-900">Total Students</h3>
-          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalStudents}</p>
-        </div>
-        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-          <h3 className="text-lg font-semibold text-blue-900">Total Admins</h3>
-          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalLecturers}</p>
-        </div>
-        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-          <h3 className="text-lg font-semibold text-blue-900">Total Courses</h3>
-          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalCourses}</p>
-        </div>
-        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
-          <h3 className="text-lg font-semibold text-blue-900">Total Batches</h3>
-          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalBatches}</p>
-        </div>
-      </div>
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-  <div className="bg-white border border-blue-100 rounded-2xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">📚 Courses Opted</h3>
-    <div className="w-full h-80 flex items-center justify-center">  {/* Reduced height here */}
-      <Pie data={courseData} options={chartOptions} />
-    </div>
-  </div>
-
-  <div className="bg-white border border-blue-100 rounded-2xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">🧑‍🏫 Admin Specializations</h3>
-    <div className="w-full h-80 flex items-center justify-center">  {/* Reduced height here */}
-      <Pie data={adminData} options={chartOptions} />
-    </div>
-  </div>
-</div>
-
-
-      <h2 className="text-3xl font-bold text-blue-900 mb-6 text-center">🏆 Leaderboard</h2>
+      <h2 className="text-3xl font-bold text-blue-900 mb-6 text-center">Leaderboard</h2>
 
       {/* Course Selector */}
       <div className="flex justify-center gap-4 mb-8">
@@ -177,6 +142,44 @@ export default function AnalyticsPage() {
           </div>
         ))}
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
+          <h3 className="text-lg font-semibold text-blue-900">Total Students</h3>
+          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalStudents}</p>
+        </div>
+        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
+          <h3 className="text-lg font-semibold text-blue-900">Total Admins</h3>
+          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalLecturers}</p>
+        </div>
+        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
+          <h3 className="text-lg font-semibold text-blue-900">Total Courses</h3>
+          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalCourses}</p>
+        </div>
+        <div className="bg-white border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">
+          <h3 className="text-lg font-semibold text-blue-900">Total Batches</h3>
+          <p className="text-5xl font-bold text-blue-700 mt-2">{stats.totalBatches}</p>
+        </div>
+      </div>
+
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+  <div className="bg-white border border-blue-100 rounded-2xl shadow-lg p-6">
+    <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">Courses Opted</h3>
+    <div className="w-full h-80 flex items-center justify-center">  {/* Reduced height here */}
+      <Pie data={courseData} options={chartOptions} />
+    </div>
+  </div>
+
+  <div className="bg-white border border-blue-100 rounded-2xl shadow-lg p-6">
+    <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">Admin Specializations</h3>
+    <div className="w-full h-80 flex items-center justify-center">  {/* Reduced height here */}
+      <Pie data={adminData} options={chartOptions} />
+    </div>
+  </div>
+</div>
+
+
+      
     </div>
   );
 }

@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { FaUpload, FaUserPlus, FaDownload } from "react-icons/fa";
 import Topbar from './topbar';
+import { ToastContainer, toast } from "react-toastify";
+
+
 
 export default function CreateBatch({ batchId, course }) {
   const [students, setStudents] = useState([]);
@@ -9,21 +12,25 @@ export default function CreateBatch({ batchId, course }) {
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    setLoading(true);
-    try {
-      const res = await axios.post("http://localhost:5000/api/upload/upload", formData);
-      setStudents(res.data.students);
-    } catch (err) {
-      alert("Error uploading file");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+const handleUpload = async (e) => {
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+  setLoading(true);
+  try {
+    const res = await axios.post("http://localhost:5000/api/upload/upload", formData);
+    setStudents(res.data.students);
+    toast.success("File uploaded successfully");
+  } catch (err) {
+    toast.error("Error uploading file");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const toggleSelect = (email) => {
     setSelected((prev) => ({ ...prev, [email]: !prev[email] }));
@@ -42,32 +49,36 @@ export default function CreateBatch({ batchId, course }) {
   try {
     const res = await axios.post("http://localhost:5000/api/students/save-selected", selectedList);
     setCredentials(res.data.credentials);
-    alert("Students added successfully");
+    setSubmitted(true); // disable button after submit
+    toast.success("Students added successfully");
   } catch (err) {
-    alert("Error saving students");
+    toast.error("Error saving students");
   } finally {
     setSaving(false);
   }
 };
 
 
-  const handleDownloadCSV = async () => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/students/download-credentials",
-        credentials,
-        { responseType: "blob" }
-      );
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "credentials.csv");
-      document.body.appendChild(link);
-      link.click();
-    } catch (err) {
-      alert("Failed to download CSV");
-    }
-  };
+
+ const handleDownloadCSV = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/students/download-credentials",
+      credentials,
+      { responseType: "blob" }
+    );
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "credentials.csv");
+    document.body.appendChild(link);
+    link.click();
+    toast.success("CSV downloaded");
+  } catch (err) {
+    toast.error("Failed to download CSV");
+  }
+};
+
 
   return (
     <div className="p-6 bg-gradient-to-tr from-white via-blue-50 to-white min-h-screen text-gray-800">
@@ -117,14 +128,15 @@ export default function CreateBatch({ batchId, course }) {
             </div>
 
             <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
-                saving ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                onClick={handleSave}
+               disabled={saving || submitted}
+               className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
+               saving || submitted ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
               }`}
             >
-              {saving ? "Saving..." : "Add Selected Students"}
+              {saving ? "Saving..." : submitted ? "Students Added" : "Add Selected Students"}
             </button>
+
 
             {credentials.length > 0 && (
               <button

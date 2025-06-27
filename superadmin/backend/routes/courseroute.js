@@ -52,4 +52,36 @@ router.post('/', async (req, res) => {
   res.json(course);
 });
 
+router.put('/:id', async (req, res) => {
+  const { courseName, modules } = req.body;
+  try {
+    const course = await Course.findByIdAndUpdate(
+      req.params.id,
+      { courseName, modules },
+      { new: true }
+    );
+    if (!course) return res.status(404).json({ message: "Course not found" });
+    res.json(course);
+  } catch (err) {
+    console.error("Error updating course:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const course = await Course.findByIdAndDelete(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    // Optional: delete associated batches/students
+    await Batch.deleteMany({ course: course._id });
+
+    res.json({ message: "Course deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting course:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;

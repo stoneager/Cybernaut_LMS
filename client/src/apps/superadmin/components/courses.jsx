@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaPlus } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import fullstack from '../assets/fullstack.jpg';
 import dataanalytics from '../assets/dataanalytics.jpg';
 
@@ -14,6 +16,11 @@ const Courses = () => {
   const [showModal, setShowModal] = useState(false);
   const [newCourseName, setNewCourseName] = useState("");
   const [newModules, setNewModules] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCourseId, setEditCourseId] = useState(null);
+  const [courseToDelete, setCourseToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 
   useEffect(() => {
     fetchCourses();
@@ -22,26 +29,65 @@ const Courses = () => {
   const fetchCourses = () => {
     axios.get("http://localhost:5001/api/courses")
       .then((res) => {
-        if (Array.isArray(res.data)) {
-          setCourses(res.data);
-        }
+        if (Array.isArray(res.data)) setCourses(res.data);
       })
       .catch((err) => console.error("Error fetching courses:", err));
   };
 
-  const handleAddCourse = () => {
-    const newCourse = {
+  const handleSaveCourse = () => {
+    const courseData = {
       courseName: newCourseName.trim(),
       modules: newModules.split(',').map(mod => mod.trim()),
     };
-    axios.post("http://localhost:5001/api/courses", newCourse)
+
+    if (!courseData.courseName || courseData.modules.length === 0) {
+      toast.error("Please enter all required fields.");
+      return;
+    }
+
+    const request = isEditing
+      ? axios.put(`http://localhost:5001/api/courses/${editCourseId}`, courseData)
+      : axios.post("http://localhost:5001/api/courses", courseData);
+
+    request
       .then(() => {
         fetchCourses();
-        setShowModal(false);
-        setNewCourseName("");
-        setNewModules("");
+        resetForm();
+        toast.success(isEditing ? "Course updated" : "Course added");
       })
-      .catch(err => console.error("Error adding course:", err));
+      .catch(err => {
+        console.error(err);
+        toast.error("Operation failed");
+      });
+  };
+
+  const resetForm = () => {
+    setNewCourseName("");
+    setNewModules("");
+    setEditCourseId(null);
+    setIsEditing(false);
+    setShowModal(false);
+  };
+
+  const handleEditCourse = (course) => {
+    setNewCourseName(course.courseName);
+    setNewModules(course.modules.join(', '));
+    setEditCourseId(course._id);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+
+  const handleDeleteCourse = (id) => {
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    axios.delete(`http://localhost:5001/api/courses/${id}`)
+      .then(() => {
+        fetchCourses();
+        toast.success("Course deleted");
+      })
+      .catch(err => {
+        console.error("Error deleting course:", err);
+        toast.error("Failed to delete course");
+      });
   };
 
   return (
@@ -49,7 +95,10 @@ const Courses = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Course Management</h1>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            resetForm(); // Ensure clean form
+            setShowModal(true);
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
         >
           <FaPlus /> Add New Course
@@ -69,8 +118,18 @@ const Courses = () => {
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Active</span>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <button className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">Edit</button>
-              <button className="px-3 py-1 text-sm bg-red-200 text-red-800 rounded hover:bg-red-300">Delete</button>
+              <button
+                className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                onClick={() => handleEditCourse(course)}
+              >
+                Edit
+              </button>
+              <button
+                className="px-3 py-1 text-sm bg-red-200 text-red-800 rounded hover:bg-red-300"
+                onClick={() => handleDeleteCourse(course._id)}
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
@@ -80,7 +139,9 @@ const Courses = () => {
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md space-y-4">
-            <h2 className="text-xl font-bold text-blue-700">Add New Course</h2>
+            <h2 className="text-xl font-bold text-blue-700">
+              {isEditing ? "Edit Course" : "Add New Course"}
+            </h2>
             <input
               type="text"
               placeholder="Course Name"
@@ -103,15 +164,17 @@ const Courses = () => {
                 Cancel
               </button>
               <button
-                onClick={handleAddCourse}
+                onClick={handleSaveCourse}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Add Course
+                {isEditing ? "Update Course" : "Add Course"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ToastContainer />
     </div>
   );
 };

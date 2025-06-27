@@ -5,7 +5,15 @@ const User = require('../models/User');
 const Batch = require('../models/Batch');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
+const transporter = nodemailer.createTransport({
+  service: "gmail", // or use "hotmail", or configure custom SMTP
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 // Utility to generate random password
 const generateRandomPassword = () => {
   return crypto.randomBytes(6).toString('hex'); // 12-char hex string
@@ -48,6 +56,7 @@ router.post('/', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
+    console.log(existingUser);
     if (existingUser) return res.status(400).json({ error: "Email already registered." });
 
     // Generate random password & hash
@@ -74,6 +83,22 @@ router.post('/', async (req, res) => {
       paidForMonth: 0
     });
     const savedAdmin = await newAdmin.save();
+
+    await transporter.sendMail({
+        from: `"Cybernaut Admin" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Welcome to Cybernaut LMS - Your Account Credentials",
+        html: `
+          <h3>Hello Admin ${name},</h3>
+          <p>Your account has been created on <strong>Cybernaut LMS</strong>.</p>
+          <p><strong>Username:</strong> ${email}</p>
+          <p><strong>Password:</strong> ${rawPassword}</p>
+          <p>You can log in at <a href="http://your-lms-domain.com/login">Cybernaut LMS</a></p>
+          <p>Cheers to a wonderful teaching career</p>
+          <br/>
+          <p>Regards,<br/>Cybernaut Team</p>
+        `,
+      });
 
     res.status(201).json({
       admin: savedAdmin,

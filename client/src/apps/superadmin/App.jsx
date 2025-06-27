@@ -11,6 +11,7 @@ import Courses from './components/courses';
 import Student from './components/student';
 import SuperAdminChat from './components/superadminchat';
 import PrivateRoute from './components/PrivateRoute';
+import Settings from './components/settings';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -23,6 +24,7 @@ const routeTitles = {
   '/superadmin/students': 'Student Management',
   '/superadmin/analytics': 'Analytics',
   '/superadmin/communication': 'Communication',
+  '/superadmin/settings': 'Settings',
 };
 
 
@@ -109,6 +111,15 @@ const AppContent = () => {
               element={
                 <PrivateRoute>
                   <SuperAdminChat />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <PrivateRoute>
+                  <Settings />
                 </PrivateRoute>
               }
             />

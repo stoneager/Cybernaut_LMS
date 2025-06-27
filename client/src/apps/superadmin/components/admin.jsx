@@ -4,6 +4,9 @@ import {
   FaPhone, FaEnvelope, FaChalkboardTeacher, FaEdit, FaTrash
 } from 'react-icons/fa';
 import { MdPersonAdd } from 'react-icons/md';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function Admins() {
   const [isEditing, setIsEditing] = useState(false);
@@ -21,6 +24,9 @@ export default function Admins() {
     dob: ''
   });
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState(null);
+
 
   useEffect(() => {
     fetchAdmins();
@@ -31,10 +37,29 @@ export default function Admins() {
     setAdmins(res.data);
   };
 
-  const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5001/api/admins/${id}`);
+  const confirmDelete = (adminId) => {
+  setAdminToDelete(adminId);
+  setDeleteModalOpen(true);
+};
+
+const handleDeleteConfirmed = async () => {
+  try {
+    await axios.delete(`http://localhost:5001/api/admins/${adminToDelete}`);
+    toast.success("Lecturer deleted successfully");
+    setDeleteModalOpen(false);
+    setAdminToDelete(null);
     fetchAdmins();
-  };
+  } catch (err) {
+    toast.error("Failed to delete lecturer");
+  }
+};
+
+const handleCancelDelete = () => {
+  setDeleteModalOpen(false);
+  setAdminToDelete(null);
+};
+
+
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -124,7 +149,8 @@ export default function Admins() {
               <span className="text-blue-600 font-bold">₹{admin.salary}</span>
               <div className="space-x-4">
                 <button className="text-blue-500 hover:text-blue-700" onClick={() => handleEdit(admin)}><FaEdit /></button>
-                <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(admin._id)}><FaTrash /></button>
+                <button className="text-red-500 hover:text-red-700" onClick={() => confirmDelete(admin._id)}><FaTrash /></button>
+
               </div>
             </div>
           </div>
@@ -207,6 +233,31 @@ export default function Admins() {
           </div>
         </div>
       )}
+
+
+      {deleteModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Deletion</h3>
+      <p className="text-gray-600 mb-6">Are you sure you want to delete this lecturer? This action cannot be undone.</p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={handleCancelDelete}
+          className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleDeleteConfirmed}
+          className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+        >
+          Yes, Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

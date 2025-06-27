@@ -15,6 +15,7 @@ const courseRoutes = require('./routes/courseroute.js');
 const batchRoutes = require('./routes/batchroute.js');
 const uploadRoutes = require('./routes/uploadroute.js')
 const systemRoutes = require("./routes/system");
+const settingsRoutes = require("./routes/settingsroute.js");
 
 const app = express();
 app.use(express.json());
@@ -33,6 +34,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use("/api/system", systemRoutes);
+app.use('/api/settings',settingsRoutes);
 
 const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

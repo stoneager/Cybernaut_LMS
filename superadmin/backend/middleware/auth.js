@@ -4,14 +4,14 @@ const User = require('../models/User'); // Adjust the path as needed
 const verifyAccessToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-
+  
   if (!token) {
     return res.status(401).json({ error: 'Access token required' });
   }
 
   try {
   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  console.log("Decoded ID Auth:", decoded.id);
+  
 
   const user = await User.findById(decoded.id);
 
@@ -20,9 +20,6 @@ const verifyAccessToken = async (req, res, next) => {
     return res.status(401).json({ error: "User not found" });
   }
 
-  console.log("User:", user);
-  console.log("Sent token:", token);
-  console.log("Stored token:", user?.activeToken);
 
   if (user.activeToken !== token) {
     console.log("⚠️ Token mismatch!");
@@ -31,6 +28,7 @@ const verifyAccessToken = async (req, res, next) => {
 
   req.user = {
     id: user._id,
+    name: user.name,
     email: user.email,
     role: user.role
   };

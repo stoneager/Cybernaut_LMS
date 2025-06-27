@@ -6,6 +6,7 @@ import {
   FaMoneyBill, FaCog, FaEnvelope, FaSignOutAlt , FaChartPie
 } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
+import {toast} from "react-toastify";
 
 const menuItems = [
   { id: "dashboard", icon: <FaHome />, label: "Dashboard", path: "/superadmin" },
@@ -16,6 +17,7 @@ const menuItems = [
   { id: "salary", icon: <FaMoneyBill />, label: "Salary Management", path: "/superadmin/salary" },
   { id: "communication", icon: <FaEnvelope />, label: "Communication", path: "/superadmin/communication" },
   { id: "analytics", icon: <FaChartPie />, label: "Analytics", path: "/superadmin/analytics" },
+  { id: "setings", icon: <FaCog />, label: "Settings", path: "/superadmin/settings" },
 ];
 
 
@@ -52,20 +54,19 @@ export default function Sidebar({ onHover }) {
   }, []);
 
 const handleLogout = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      await axios.post(
-        "http://localhost:5000/auth/logout",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      localStorage.removeItem("token");
-      toast.success("Logged out");
-      window.location.href = "http://localhost:5173/login";
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
+  const token = localStorage.getItem("token");
+  try {
+    localStorage.removeItem("token");
+    toast.success("Logged out successfully");
+    setTimeout(() => {
+      navigate("/login");
+    }, 500);
+  } catch (error) {
+    console.error("Logout failed:", error);
+    toast.error("Logout failed");
+  }
+};
+
 
   return (
     <aside
@@ -77,7 +78,7 @@ const handleLogout = async () => {
         setExpanded(false);
         onHover(false);
       }}
-      className={`h-screen ${expanded ? "w-64" : "w-18"} bg-white border-r border-gray-200 shadow-sm flex flex-col justify-between fixed top-0 left-0 z-50 transition-all duration-800 ease-in-out`}
+      className={`h-[98vh] ${expanded ? "w-64" : "w-18"} bg-white border-r border-gray-200 shadow-sm flex flex-col justify-between fixed top-0 left-0 z-50 transition-all duration-300`}
     >
       <div>
         <div className="flex items-center gap-2 p-2 border-b">
@@ -136,14 +137,7 @@ const handleLogout = async () => {
         </nav>
       </div>
 
-      <div className="p-4 border-t flex flex-col gap-2 mt-10">
-        <button
-          onClick={() => navigate("/settings")}
-          className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600"
-        >
-          <FaCog className="text-lg" />
-          {expanded && "Settings"}
-        </button>
+      <div className="p-4 border-t flex flex-col gap-2">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 text-sm text-red-600 hover:text-red-800"
