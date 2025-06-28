@@ -22,7 +22,7 @@ const VerifyCode = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-white to-purple-200 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 via-white to-white p-6">
       <div className="bg-white shadow-2xl rounded-3xl flex w-full max-w-4xl overflow-hidden">
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
           <div className="flex justify-center mb-6">

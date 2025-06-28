@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import CalendarWidget from "../widgets/CalendarWidget";
+import NotesWidget from '../widgets/NotesWidget';
+import CourseProgressWidget from '../widgets/CourseProgressWidget';
 
 function StudentHome() {
   const [student, setStudent] = useState(null);
-  const [batch, setBatch] = useState(null);
+  const [date, setDate] = useState(new Date());
+  const [latestNote, setLatestNote] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,11 +21,6 @@ function StudentHome() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setStudent(res.data);
-
-        const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${res.data.batch}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBatch(batchRes.data);
       } catch {
         alert('Failed to load student');
         navigate('/');
@@ -30,6 +29,50 @@ function StudentHome() {
 
     fetchStudentData();
   }, [navigate]);
+
+useEffect(() => {
+  const fetchLatestNote = async () => {
+    try {
+      if (!student?.batch) return;
+      const token = localStorage.getItem('token');
+
+      // Step 1: Fetch full batch data
+      const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${student.batch}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const batch = batchRes.data;
+      let latest = null;
+      let maxDay = -1;
+
+      // Step 2: Loop over all module-admin pairs
+      for (const adminObj of batch.admins || []) {
+        const moduleName = adminObj.module;
+
+        const notesRes = await axios.get(`http://localhost:5003/notes/${batch._id}/${moduleName}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const notes = Array.isArray(notesRes.data) ? notesRes.data : notesRes.data.notes || [];
+        const latestModuleNote = notes.reduce((acc, note) => {
+          if ((note.day || 0) > (acc?.day || 0)) return note;
+          return acc;
+        }, null);
+
+        if (latestModuleNote && latestModuleNote.day > maxDay) {
+          latest = latestModuleNote;
+          maxDay = latestModuleNote.day;
+        }
+      }
+
+      setLatestNote(latest);
+    } catch (err) {
+      console.error("Error fetching latest note:", err);
+    }
+  };
+
+  fetchLatestNote();
+}, [student]);
+
 
   const logout = () => {
     localStorage.clear();
@@ -40,90 +83,76 @@ function StudentHome() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-3xl font-semibold text-gray-800">Welcome Student {student.name}</h2>
-
-        <div className="flex space-x-3">
-          <button
-            onClick={() => navigate('/student/profile')}
-            className="bg-gray-200 px-4 py-2 rounded-md shadow hover:bg-gray-300 transition"
-          >
-            Profile
-          </button>
-          <button
-            onClick={logout}
-            className="bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition"
-          >
-            Logout
-          </button>
-        </div>
+        <h2 className="text-3xl font-semibold text-gray-800">
+          Welcome back {student.name}
+        </h2>
+        <button
+          onClick={logout}
+          className="bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition"
+        >
+          Logout
+        </button>
       </div>
 
-      {batch && (
-        <div className="bg-white p-4 rounded-md shadow mb-6 cursor-pointer hover:bg-gray-100" onClick={() => navigate(`/student/batch/${batch._id}`)}>
-          <h3 className="text-xl font-semibold text-gray-700">My Batch</h3>
-          <p className="text-sm text-gray-600 mt-1">{batch.batchName} - {new Date(batch.startDate).toLocaleDateString()}</p>
-        </div>
-      )}
+      {/* Main content */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Left Column */}
+        <div className="w-full md:w-3/5">
+          <CourseProgressWidget progress={72} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-md shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Enrolled Courses</p>
-            <p className="text-xl font-semibold">4</p>
-            <p className="text-xs text-gray-400">2 in progress</p>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            <div className="bg-white border shadow-sm rounded-lg p-4 flex flex-col items-center text-center">
+              <span className="text-xl font-bold text-blue-600">3</span>
+              <p className="text-sm text-gray-600 mt-1">Assignments Pending</p>
+            </div>
+            <div className="bg-white border shadow-sm rounded-lg p-4 flex flex-col items-center text-center">
+              <span className="text-xl font-bold text-yellow-600">2</span>
+              <p className="text-sm text-gray-600 mt-1">Quizzes Pending</p>
+            </div>
+            <div className="bg-white border shadow-sm rounded-lg p-4 flex flex-col items-center text-center">
+              <span className="text-xl font-bold text-yellow-600">2</span>
+              <p className="text-sm text-gray-600 mt-1">Code Pending</p>
+            </div>
           </div>
-          <div className="text-blue-500 text-3xl">📚</div>
-        </div>
-        <div className="bg-white p-4 rounded-md shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Completed Assignments</p>
-            <p className="text-xl font-semibold">23</p>
-            <p className="text-xs text-gray-400">3 pending</p>
-          </div>
-          <div className="text-green-500 text-3xl">📄</div>
-        </div>
-        <div className="bg-white p-4 rounded-md shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Live Sessions</p>
-            <p className="text-xl font-semibold">18</p>
-            <p className="text-xs text-gray-400">2 upcoming</p>
-          </div>
-          <div className="text-purple-500 text-3xl">🎥</div>
-        </div>
-        <div className="bg-white p-4 rounded-md shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Overall Progress</p>
-            <p className="text-xl font-semibold">78%</p>
-            <p className="text-xs text-gray-400">+5% this week</p>
-          </div>
-          <div className="text-yellow-500 text-3xl">🏆</div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <button className="bg-purple-600 text-white py-3 rounded-md shadow hover:bg-purple-700 transition cursor-pointer">Continue Learning</button>
-        <button className="bg-white border border-gray-300 py-3 rounded-md shadow hover:bg-gray-100 transition cursor-pointer">Submit Assignment</button>
-        <button className="bg-white border border-gray-300 py-3 rounded-md shadow hover:bg-gray-100 transition cursor-pointer">Join Live Session</button>
-        <button className="bg-white border border-gray-300 py-3 rounded-md shadow hover:bg-gray-100 transition cursor-pointer">Ask Question</button>
-      </div>
+          {/* Latest Note Widget */}
+          {latestNote && (
+            <div className="mt-6 bg-white border shadow-sm rounded-lg p-5 space-y-2">
+              <div className="flex justify-between items-center mb-1">
+                <h3 className="text-md font-semibold text-gray-800">
+                  Latest Note - Day {latestNote.day}
+                </h3>
+              </div>
+              <p className="text-sm text-gray-700 font-medium">{latestNote.title}</p>
+              <div className="flex gap-3 mt-3">
+                <a
+                  href={latestNote.meetlink}
+                  target="_blank"
+                  rel="noreferrer"
+className="text-xs px-3 py-1 bg-black text-white rounded hover:bg-gray-700 transition-colors duration-200"
+                >
+                  Join Meet
+                </a>
+                <a
+                  href={latestNote.quizlink}
+                  target="_blank"
+                  rel="noreferrer"
+className="text-xs px-3 py-1 bg-black text-white rounded hover:bg-gray-700 transition-colors duration-200"
+                >
+                  Attempt Quiz
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
 
-      <div className="bg-white p-4 rounded-md shadow mt-6 grid grid-cols-2 md:grid-cols-4 text-center text-sm text-gray-600">
-        <div>
-          <p className="font-semibold text-lg text-blue-600">98%</p>
-          <p>Attendance Rate</p>
-        </div>
-        <div>
-          <p className="font-semibold text-lg text-green-600">A-</p>
-          <p>Average Grade</p>
-        </div>
-        <div>
-          <p className="font-semibold text-lg text-purple-600">23/26</p>
-          <p>Assignments Done</p>
-        </div>
-        <div>
-          <p className="font-semibold text-lg text-yellow-500">5</p>
-          <p>Certificates Earned</p>
+        {/* Right Column */}
+        <div className="w-full md:w-2/5 space-y-6">
+          <CalendarWidget date={date} setDate={setDate} />
+          <NotesWidget />
         </div>
       </div>
     </div>

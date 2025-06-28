@@ -1,13 +1,12 @@
-import { useEffect } from 'react';
-import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import StudentHome from './pages/StudentHome';
 import StudentChat from './pages/StudentChat';
-import { ToastContainer, toast } from 'react-toastify';
 import StudentBatch from './pages/StudentBatch';
-
+import StudentSidebar from './pages/StudentSidebar';
+import { ToastContainer } from 'react-toastify';
+import Settings from './pages/Settings';
 function AppRoutes() {
-
   return (
     <>
       <ToastContainer />
@@ -16,7 +15,9 @@ function AppRoutes() {
           path="/"
           element={
             <PrivateRoute>
-              <StudentHome />
+              <StudentSidebar>
+                <StudentHome />
+              </StudentSidebar>
             </PrivateRoute>
           }
         />
@@ -25,22 +26,45 @@ function AppRoutes() {
           path="/chat/:module/:type"
           element={
             <PrivateRoute>
-              <StudentChat />
+              <StudentSidebar>
+                <StudentChat />
+              </StudentSidebar>
             </PrivateRoute>
           }
         />
 
-        <Route path="/batch/:batchId" 
+        <Route
+          path="/batch/:batchId"
           element={
             <PrivateRoute>
+              <StudentSidebar>
                 <StudentBatch />
-            </PrivateRoute>} />
-        
-        <Route path="/chat" element={<StudentChat />} />
+              </StudentSidebar>
+            </PrivateRoute>
+          }
+        />
 
+        <Route
+          path="/chat"
+          element={
+            <PrivateRoute>
+              <StudentSidebar>
+                <StudentChat />
+              </StudentSidebar>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <StudentSidebar>
+                <Settings />
+              </StudentSidebar>
+            </PrivateRoute>
+          }
+        />
       </Routes>
-
-
     </>
   );
 }

@@ -12,7 +12,7 @@ const PrivateRoute = ({ children }) => {
       if (!token) {
         setIsAuthenticated(false);
         setCheckingAuth(false);
-        window.location.href = 'http://localhost:3000'; // Redirect to login
+        window.location.href = 'http://localhost:5173'; // Redirect to login
         return;
       }
 
@@ -27,7 +27,7 @@ const PrivateRoute = ({ children }) => {
       } catch (err) {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
-        window.location.href = 'http://localhost:3000'; // Redirect to login
+        window.location.href = 'http://localhost:5173'; // Redirect to login
       } finally {
         setCheckingAuth(false);
       }
