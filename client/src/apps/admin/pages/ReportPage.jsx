@@ -3,6 +3,7 @@ import { FaSearch } from "react-icons/fa";
 import AdminLayout from "../components/AdminLayout";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import AdminLeaderboard from "./AdminLeaderboard";
 
 const ReportPage = () => {
   const { batchId } = useParams();
@@ -44,6 +45,7 @@ const ReportPage = () => {
 
   return (
       <div>
+      <AdminLeaderboard/>
       {/* Search */}
       <div className="flex items-center mt-6 mb-4">
         <div className="relative w-full max-w-xl mx-auto">

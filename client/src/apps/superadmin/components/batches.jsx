@@ -104,8 +104,21 @@ const Batches = () => {
   setLoading(true);
   try {
     const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
-    setStudents(res.data.students);
-    toast.success("Students added successfully!");
+const cleanedStudents = res.data.students.map(stu => ({
+  ...stu,
+  email: typeof stu.email === "object" ? stu.email.text : stu.email,
+  name: typeof stu.name === "object" ? stu.name.text : stu.name,
+  phone: typeof stu.phone === "object" ? stu.phone.text : stu.phone,
+}));
+setStudents(cleanedStudents);
+
+// Auto-select
+const autoSelected = {};
+cleanedStudents.forEach(stu => {
+  autoSelected[stu.email] = true;
+});
+setSelected(autoSelected);
+
 
   } catch (err) {
     toast.error("Error saving students");
@@ -117,30 +130,35 @@ const Batches = () => {
 
 
   const toggleSelect = (email) => {
-    setSelected((prev) => ({ ...prev, [email]: !prev[email] }));
-  };
+  const cleanEmail = typeof email === "object" ? email.text : email;
+  setSelected((prev) => ({ ...prev, [cleanEmail]: !prev[cleanEmail] }));
+};
+ 
 
-  const handleSave = async () => {
-    const selectedList = students
-      .filter((stu) => selected[stu.email])
-      .map((stu) => ({
-        ...stu,
-        course: showModal2.course,
-        batch: showModal2.batchId,
-      }));
+const [added, setAdded] = useState(false);
 
-    setSaving(true);
-    try {
-      const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
-      setCredentials(res.data.credentials);
-      toast.success("Students Added Successfully");
+const handleSave = async () => {
+  const selectedList = students
+    .filter((stu) => selected[stu.email])
+    .map((stu) => ({
+      ...stu,
+      course: showModal2.course,
+      batch: showModal2.batchId,
+    }));
 
-    } catch (err) {
-      alert("Error saving students");
-    } finally {
-      setSaving(false);
-    }
-  };
+  setSaving(true);
+  try {
+    const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
+    setCredentials(res.data.credentials);
+    toast.success("Students Added Successfully");
+    setAdded(true); // ✅ Disable button
+  } catch (err) {
+    alert("Error saving students");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleDownloadCSV = async () => {
     try {
@@ -377,15 +395,16 @@ const Batches = () => {
             </table>
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
-              saving ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-            }`}
-          >
-            {saving ? "Saving..." : "Add Selected Students"}
-          </button>
+         <button
+  onClick={handleSave}
+  disabled={saving || added}
+  className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
+    saving || added ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+  }`}
+>
+  {saving ? "Saving..." : added ? "Students Added" : "Add Selected Students"}
+</button>
+
 
           {credentials.length > 0 && (
             <button

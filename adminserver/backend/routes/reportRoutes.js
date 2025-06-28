@@ -67,18 +67,12 @@ router.get('/batch/:batchId', Verify, async (req, res) => {
       return res.status(404).json({ message: 'Batch not found' });
     }
 
-    // Debug print all admin entries
-    console.log("🔍 Batch Admins:");
-    batch.admins.forEach((a, i) => {
-      console.log(`Admin[${i}]: userId=${a.admin}, module=${a.module}`);
-    });
 
     // Filter by admin's user ID directly
     const modulesHandled = batch.admins
       .filter(a => a.admin.toString() === adminUserId.toString())
       .map(a => a.module);
 
-    console.log("✅ Modules handled by this admin:", modulesHandled);
 
     if (modulesHandled.length === 0) return res.json([]);
 
@@ -101,6 +95,84 @@ router.get('/batch/:batchId', Verify, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// routes/reports.js
+router.get("/admin-leaderboard", Verify, async (req, res) => {
+  try {
+    const { batchId, module } = req.query;
+    const userId = req.user.id;
+
+    if (!batchId || !module) return res.status(400).json({ message: "batchId and module required" });
+
+    const batch = await Batch.findById(batchId);
+    if (!batch) return res.status(404).json({ message: "Batch not found" });
+
+    const isAuthorized = batch.admins.some(
+      (a) => a.admin.toString() === userId && a.module === module
+    );
+    if (!isAuthorized) return res.status(403).json({ message: "Not authorized for this module" });
+
+    const studentIds = await Student.find({ batch: batchId }).distinct("_id");
+
+    const topStudents = await Report.aggregate([
+      {
+        $match: {
+          student: { $in: studentIds },
+          module: module,
+        },
+      },
+      {
+        $group: {
+          _id: "$student",
+          total: {
+            $sum: { $sum: "$marksObtained" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          avg: {
+            $divide: ["$total", { $multiply: ["$count", 3] }],
+          },
+        },
+      },
+      { $sort: { avg: -1 } },
+      { $limit: 3 },
+      {
+        $lookup: {
+          from: "students",
+          localField: "_id",
+          foreignField: "_id",
+          as: "student",
+        },
+      },
+      { $unwind: "$student" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "student.user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          name: "$user.name",
+          avg: { $round: ["$avg", 2] },
+        },
+      },
+    ]);
+
+    res.json(topStudents);
+  } catch (err) {
+    console.error("❌ Error in /admin-leaderboard:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 
 

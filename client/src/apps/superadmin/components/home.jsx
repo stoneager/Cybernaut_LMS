@@ -72,10 +72,10 @@ useEffect(() => {
 
     {/* Action Buttons */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-      <button onClick={() => navigate("/admins")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Add New Lecturer</button>
-      <button onClick={() => navigate("/courses")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Manage Courses</button>
-      <button onClick={() => navigate("/batches")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Batch Management</button>
-      <button onClick={() => navigate("/salary")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Pay Salary</button>
+      <button onClick={() => navigate("admins")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Add New Lecturer</button>
+      <button onClick={() => navigate("courses")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Manage Courses</button>
+      <button onClick={() => navigate("batches")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Batch Management</button>
+      <button onClick={() => navigate("salary")} className="bg-white border border-blue-200 text-blue-700 py-3 rounded-xl font-medium hover:bg-blue-50 transition">Pay Salary</button>
     </div>
 
     {/* System Overview Placeholder */}

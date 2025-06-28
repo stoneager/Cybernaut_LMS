@@ -1,7 +1,5 @@
-// 📁 src/pages/StudentList.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Sidebar from '../components/Sidebar';
 
 export default function StudentList() {
   const [students, setStudents] = useState([]);
@@ -9,8 +7,14 @@ export default function StudentList() {
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
 
+  const [availableModules, setAvailableModules] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardModule, setLeaderboardModule] = useState("");
+  const [leaderboardBatchId, setLeaderboardBatchId] = useState("");
+
   const token = localStorage.getItem("token");
 
+  // Fetch students list and batchOptions
   useEffect(() => {
     fetchStudents();
   }, [search, selectedBatch]);
@@ -28,31 +32,64 @@ export default function StudentList() {
 
       setStudents(res.data.students || []);
       setBatchOptions(res.data.batchOptions || []);
+
+      // Modules the admin teaches
+      if (res.data.modules) {
+        setAvailableModules(res.data.modules);
+        setLeaderboardModule(res.data.modules[0] || "");
+      }
+
+      // Default to first batch for leaderboard filter
+      if (res.data.batchOptions.length > 0) {
+        setLeaderboardBatchId(res.data.batchOptions[0]._id);
+      }
+
     } catch (err) {
       console.error("Failed to fetch students", err);
     }
   };
 
+  // Fetch leaderboard
+  useEffect(() => {
+    if (leaderboardModule && leaderboardBatchId) {
+      axios.get("http://localhost:5002/statistics/leaderboard", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { module: leaderboardModule, batchId: leaderboardBatchId },
+        withCredentials: true
+      }).then(res => {
+        setLeaderboard(res.data);
+      }).catch(err => {
+        console.error("Leaderboard fetch error:", err);
+      });
+    }
+  }, [leaderboardModule, leaderboardBatchId]);
+
   return (
-    
-      <div className="p-8 bg-gray-50 min-h-screen">
-        <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search by student name..."
-            className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Leaderboard */}
+      <div className="bg-white p-6 rounded-xl shadow-md border mb-10 max-w-2xl">
+        <div className="flex flex-wrap gap-3 items-center mb-4">
+          <h3 className="text-lg font-semibold text-blue-900">Top Performers</h3>
 
+          {/* Module Filter */}
           <select
-            className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
-            value={selectedBatch}
-            onChange={(e) => setSelectedBatch(e.target.value)}
+            value={leaderboardModule}
+            onChange={(e) => setLeaderboardModule(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
           >
-            <option value="">All Batches</option>
+            {availableModules.map((mod, i) => (
+              <option key={i} value={mod}>{mod}</option>
+            ))}
+          </select>
+
+          {/* Batch Filter */}
+          <select
+            value={leaderboardBatchId}
+            onChange={(e) => setLeaderboardBatchId(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
             {batchOptions.map((batch) => (
               <option key={batch._id} value={batch._id}>
                 {batch.batchName}
@@ -61,33 +98,71 @@ export default function StudentList() {
           </select>
         </div>
 
-        {students.length === 0 ? (
-          <p className="text-gray-600 text-center mt-8">No students found.</p>
+        {leaderboard.length === 0 ? (
+          <p className="text-gray-500 text-sm">No data available</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg shadow">
-            <table className="min-w-full bg-white">
-              <thead>
-                <tr className="bg-blue-100 text-blue-900 text-left text-sm">
-                  <th className="py-3 px-4">Name</th>
-                  <th className="py-3 px-4">Email</th>
-                  <th className="py-3 px-4">Phone</th>
-                  <th className="py-3 px-4">Batch</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student._id} className="border-t hover:bg-gray-50 text-sm">
-                    <td className="py-2 px-4">{student.name}</td>
-                    <td className="py-2 px-4">{student.email}</td>
-                    <td className="py-2 px-4">{student.phone}</td>
-                    <td className="py-2 px-4">{student.batchName}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-gray-200">
+            {leaderboard.map((entry, index) => (
+              <li key={index} className="py-2 flex justify-between">
+                <span className="text-gray-800 font-medium">{entry.name}</span>
+                <span className="text-blue-700 font-semibold">{entry.avg} / 100</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-    
+
+      {/* Search and filter */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by student name..."
+          className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <select
+          className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
+          value={selectedBatch}
+          onChange={(e) => setSelectedBatch(e.target.value)}
+        >
+          <option value="">All Batches</option>
+          {batchOptions.map((batch) => (
+            <option key={batch._id} value={batch._id}>
+              {batch.batchName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Student Table */}
+      {students.length === 0 ? (
+        <p className="text-gray-600 text-center mt-8">No students found.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg shadow">
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr className="bg-blue-100 text-blue-900 text-left text-sm">
+                <th className="py-3 px-4">Name</th>
+                <th className="py-3 px-4">Email</th>
+                <th className="py-3 px-4">Phone</th>
+                <th className="py-3 px-4">Batch</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr key={student._id} className="border-t hover:bg-gray-50 text-sm">
+                  <td className="py-2 px-4">{student.name}</td>
+                  <td className="py-2 px-4">{student.email}</td>
+                  <td className="py-2 px-4">{student.phone}</td>
+                  <td className="py-2 px-4">{student.batchName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }

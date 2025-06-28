@@ -1,0 +1,61 @@
+/* CustomCalendar.css */
+
+.react-calendar {
+  border: none;
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  background: white;
+}
+
+/* Navigation */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.react-calendar__navigation button {
+  background: none;
+  font-weight: 600;
+  color: #000;
+  font-size: 1rem;
+}
+.react-calendar__navigation button:disabled {
+  color: #ccc;
+}
+
+/* Weekday labels */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+}
+
+/* Tiles (days) */
+.react-calendar__tile {
+  height: 40px;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: #333;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.react-calendar__tile--now {
+  background: #e5f0ff;
+  color: #000;
+}
+
+.react-calendar__tile--active {
+  background: #007aff !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.react-calendar__tile:enabled:hover {
+  background: #007aff20;
+}
