@@ -7,6 +7,17 @@ const Student = require('../models/Student');
 const Admin = require('../models/Admin');
 
 const router = express.Router();
+const nodemailer = require("nodemailer");
+const otpStore = {};
+const timeoutStore = {};
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
 
 // Token Generators
 const generateAccessToken = (user) =>
@@ -84,20 +95,6 @@ router.get('/superadmin/me', verifyAccessToken, async (req, res) => {
   }
 });
 
-// -----------------------------
-// Change Password
-// -----------------------------
-router.post('/change-password', async (req, res) => {
-  const { email, newPassword } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  
-  user.password = await bcrypt.hash(newPassword, 10);
-  await user.save();
-
-  res.json({ message: 'Password changed successfully' });
-});
 
 router.post("/register", async (req, res) => {
   const { name, email, password, role } = req.body;
@@ -181,6 +178,76 @@ router.get("/verify", verifyAccessToken, (req, res) => {
   return res.status(200).json({ message: "Token valid" });
 });
 
+router.post("/send-reset-code", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: "Email not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStore[email] = otp;
+
+    if (timeoutStore[email]) clearTimeout(timeoutStore[email]);
+    timeoutStore[email] = setTimeout(() => {
+      delete otpStore[email];
+      delete timeoutStore[email];
+    }, 10 * 60 * 1000);
+
+
+    await transporter.sendMail({
+      to: email,
+      subject: "Cybernaut LMS Password Reset",
+      html: `<p>Hello <b>${user.name}</b>,</p>
+             <p>Your OTP to reset your password is:</p>
+             <h2>${otp}</h2>
+             <p>This OTP is valid for 10 minutes. If not requested by you, please ignore this email.</p>`,
+    });
+
+    return res.json({ message: "OTP sent to your email" });
+  } catch (error) {
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+router.post("/verify-reset-code", (req, res) => {
+  const { email, code } = req.body;
+
+  if (!otpStore[email]) {
+    return res.status(400).json({ error: "OTP expired or not requested" });
+  }
+
+  if (otpStore[email] !== code) {
+    return res.status(400).json({ error: "Invalid OTP" });
+  }
+
+  return res.json({ message: "OTP verified" });
+});
+
+// 🔒 3. Reset Password
+router.post("/reset-password", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!otpStore[email]) {
+    return res.status(403).json({ error: "OTP not verified or expired" });
+  }
+
+  try {
+    const hashed = await bcrypt.hash(password, 10);
+    await User.findOneAndUpdate({ email }, { password: hashed });
+
+    // Cleanup OTP and timer
+    delete otpStore[email];
+    if (timeoutStore[email]) {
+      clearTimeout(timeoutStore[email]);
+      delete timeoutStore[email];
+    }
+
+    return res.json({ message: "Password successfully updated" });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to update password" });
+  }
+});
 
 
 module.exports = router;
