@@ -8,6 +8,14 @@ const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
+function sanitizeCell(value) {
+  if (value && typeof value === "object") {
+    return value.text || "";
+  }
+  return value;
+}
+
+
 const transporter = nodemailer.createTransport({
   service: "gmail", // or use "hotmail", or configure custom SMTP
   auth: {
@@ -22,49 +30,57 @@ router.post("/save-selected", async (req, res) => {
 
   try {
     for (const stu of selectedStudents) {
-      const existingUser = await User.findOne({ email: stu.email });
+      const email = sanitizeCell(stu.email);
+const name = sanitizeCell(stu.name);
+const phone = sanitizeCell(stu.phone);
+const address = sanitizeCell(stu.address);
+const dob = stu.dob && typeof stu.dob === 'number'
+  ? new Date(new Date(Date.UTC(1899, 11, 30)).getTime() + stu.dob * 86400000)
+  : new Date(stu.dob);
+
+const existingUser = await User.findOne({ email });
+if (existingUser) continue;
+
       if (existingUser) continue;
 
       const plainPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(plainPassword, 10);
-      const newUser = await User.create({
-        name: stu.name,
-        email: stu.email,
-        password: hashedPassword,
-        role: "student",
-      });
-      const new_dob = new Date(stu.dob);
+const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-      await Student.create({
-        user: newUser._id,
-        course: stu.course,
-        batch: stu.batch,
-        phone: stu.phone,
-        address: stu.address,
-        dob: new_dob,
-      });
+const newUser = await User.create({
+  name,
+  email,
+  password: hashedPassword,
+  role: "student",
+});
 
-      credentials.push({
-        name: stu.name,
-        email: stu.email,
-        password: plainPassword,
-      });
+await Student.create({
+  user: newUser._id,
+  course: stu.course,
+  batch: stu.batch,
+  phone,
+  address,
+  dob,
+});
+
+credentials.push({ name, email, password: plainPassword });
+
 
       // Send Email
       await transporter.sendMail({
-        from: `"Cybernaut Admin" <${process.env.EMAIL_USER}>`,
-        to: stu.email,
-        subject: "Welcome to Cybernaut LMS - Your Account Credentials",
-        html: `
-          <h3>Hello ${stu.name},</h3>
-          <p>Your account has been created on <strong>Cybernaut LMS</strong>.</p>
-          <p><strong>Username:</strong> ${stu.email}</p>
-          <p><strong>Password:</strong> ${plainPassword}</p>
-          <p>You can log in at <a href="http://your-lms-domain.com/login">Cybernaut LMS</a></p>
-          <br/>
-          <p>Regards,<br/>Cybernaut Team</p>
-        `,
-      });
+  from: `"Cybernaut Admin" <${process.env.EMAIL_USER}>`,
+  to: email,
+  subject: "Welcome to Cybernaut LMS - Your Account Credentials",
+  html: `
+    <h3>Hello ${name},</h3>
+    <p>Your account has been created on <strong>Cybernaut LMS</strong>.</p>
+    <p><strong>Username:</strong> ${email}</p>
+    <p><strong>Password:</strong> ${plainPassword}</p>
+    <p>You can log in at <a href="http://your-lms-domain.com/login">Cybernaut LMS</a></p>
+    <br/>
+    <p>Regards,<br/>Cybernaut Team</p>
+  `,
+});
+
     }
 
     res.json({ credentials });

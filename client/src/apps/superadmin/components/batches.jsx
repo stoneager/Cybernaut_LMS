@@ -98,19 +98,23 @@ const Batches = () => {
   };
 
   const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    setLoading(true);
-    try {
-      const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
-      setStudents(res.data.students);
-    } catch (err) {
-      alert("Error uploading file");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+  setLoading(true);
+  try {
+    const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
+    setStudents(res.data.students);
+    toast.success("Students added successfully!");
+
+  } catch (err) {
+    toast.error("Error saving students");
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const toggleSelect = (email) => {
     setSelected((prev) => ({ ...prev, [email]: !prev[email] }));
@@ -129,7 +133,8 @@ const Batches = () => {
     try {
       const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
       setCredentials(res.data.credentials);
-      alert("Students added successfully");
+      toast.success("Students Added Successfully");
+
     } catch (err) {
       alert("Error saving students");
     } finally {
@@ -356,9 +361,16 @@ const Batches = () => {
                         checked={!!selected[stu.email]}
                       />
                     </td>
-                    <td className="p-4">{stu.name}</td>
-                    <td className="p-4">{stu.email}</td>
-                    <td className="p-4">{stu.phone}</td>
+                    <td className="p-4">
+  {typeof stu.name === "object" ? stu.name.text : stu.name}
+</td>
+<td className="p-4">
+  {typeof stu.email === "object" ? stu.email.text : stu.email}
+</td>
+<td className="p-4">
+  {typeof stu.phone === "object" ? stu.phone.text : stu.phone}
+</td>
+
                   </tr>
                 ))}
               </tbody>

@@ -1,29 +1,60 @@
 const express = require('express');
 const multer = require('multer');
-const xlsx = require('xlsx');
+const ExcelJS = require('exceljs');
 
 const router = express.Router();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+
+
 function excelDateToJSDate(serial) {
   const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-  const date = new Date(excelEpoch.getTime() + (serial) * 86400000); // Add 1 day
+  const date = new Date(excelEpoch.getTime() + (serial) * 86400000);
   return date;
 }
 
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(req.file.buffer);
 
+    const worksheet = workbook.worksheets[0]; // First sheet
+    const rows = [];
+    const headers = [];
 
-router.post('/upload', upload.single('file'), (req, res) => {
-  const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  let data = xlsx.utils.sheet_to_json(sheet);
-  data = data.map(stu => ({
-    ...stu,
-    dob: typeof stu.dob === 'number' ? excelDateToJSDate(stu.dob) : new Date(stu.dob)
-  }));
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      const values = row.values.slice(1); // Skip index 0 (ExcelJS starts at 1)
 
-  res.json({ students: data });
+      if (rowNumber === 1) {
+        headers.push(...values);
+      } else {
+        const rowData = {};
+        values.forEach((value, index) => {
+          let header = headers[index];
+          if (header) {
+            // Convert dob if needed
+            if (header.toLowerCase() === 'dob') {
+              if (typeof value === 'number') {
+                rowData[header] = excelDateToJSDate(value);
+              } else {
+                rowData[header] = new Date(value);
+              }
+            } else {
+              rowData[header] = value;
+            }
+          }
+        });
+        rows.push(rowData);
+      }
+    });
+
+    res.json({ students: rows });
+  } catch (error) {
+    console.error("Excel parsing error:", error);
+    res.status(500).json({ error: "Failed to parse Excel file" });
+  }
 });
+
 module.exports = router;
