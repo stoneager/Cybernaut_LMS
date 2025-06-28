@@ -12,92 +12,94 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  try {
-    const res = await API.post("/auth/login", { email, password });
-    const { accessToken, refreshToken, role } = res.data;
+    try {
+      const res = await API.post("/auth/login", { email, password });
+      const { accessToken, refreshToken, role } = res.data;
 
-    localStorage.setItem("token", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-    localStorage.setItem("role", role);
-    localStorage.setItem("email", email);
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("role", role);
+      localStorage.setItem("email", email);
 
-    // Redirect to appropriate server based on role
-    if (role === "superadmin") {
-      window.location.href = `http://localhost:5173/superadmin?token=${accessToken}&role=${role}`;
-    } else if (role === "admin") {
-      window.location.href = `http://localhost:5173/admin?token=${accessToken}&role=${role}`;
-    } else if (role === "student") {
-      window.location.href = `http://localhost:5173/student?token=${accessToken}&role=${role}`;
+      window.location.href = `http://localhost:5173/${role}?token=${accessToken}&role=${role}`;
+    } catch (err) {
+      setError(err.response?.data?.error || "Login failed.");
+    } finally {
+      setLoading(false);
     }
-    else {
-      setError("Unknown user role");
-    }
-
-  } catch (err) {
-    setError(err.response?.data?.error || "Login failed.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-white">
-        <form onSubmit={handleLogin} className="w-full max-w-sm space-y-6">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="Company Logo" className="h-10" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 p-6">
+      <div className="bg-white shadow-2xl rounded-3xl flex w-full max-w-5xl overflow-hidden">
+        {/* Left Form */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="Company Logo" className="h-12" />
           </div>
-          <h2 className="text-2xl font-bold text-center">Sign in</h2>
-          <p className="text-sm text-center text-gray-500">
+          <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">Sign in</h2>
+          <p className="text-sm text-center text-gray-500 mb-6">
             Please login to continue to your account.
           </p>
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your Email"
-            />
-          </div>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your email"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your Password"
-            />
-          </div>
+            <div>
+              <div className="flex justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your password"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 rounded-lg text-white transition ${
-              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? "Logging in..." : "Sign in"}
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-2 rounded-lg text-white font-semibold transition ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {loading ? "Logging in..." : "Sign in"}
+            </button>
+          </form>
+        </div>
 
-      {/* Right Panel - Image */}
-      <div className="hidden md:block md:w-1/2">
-        <img src={sideImage} alt="Side Visual" className="object-cover mt-12" />
+        {/* Right Side Image */}
+        <div className="hidden md:block md:w-1/2">
+          <img src={sideImage} alt="Visual" className="h-full w-full object-cover" />
+        </div>
       </div>
     </div>
   );
