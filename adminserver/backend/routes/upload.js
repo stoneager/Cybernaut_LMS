@@ -81,16 +81,19 @@ router.get('/assignment-question/:batch/:module/:title', (req, res) => {
   res.json({ url: s3Url });
 });
 
-router.post('/notes/upload/:batch/:module/:title/:student', upload.single('file'), async (req, res) => {
-  const { batch, module, title, student } = req.params;
-    const cleanBatch = sanitizeForFolderName(batch);
-    const cleanModule = sanitizeForFolderName(module);
-    const cleanTitle = sanitizeForFolderName(title);
+router.post('/notes/upload/:batch/:module/:title/:student/:studentid/:day', upload.single('file'), async (req, res) => {
+  const { batch, module, title, student, studentid, day } = req.params;
+
   if (!req.file) return res.status(400).json({ error: 'No file' });
+
+  const cleanBatch = sanitizeForFolderName(batch);
+  const cleanModule = sanitizeForFolderName(module);
+  const cleanTitle = sanitizeForFolderName(title);
 
   const key = `${cleanBatch}/${cleanModule}/${cleanTitle}/assignment/${student}/answer.pdf`;
 
   try {
+    // Upload to S3
     await s3.send(new PutObjectCommand({
       Bucket: bucketName,
       Key: key,
@@ -98,19 +101,34 @@ router.post('/notes/upload/:batch/:module/:title/:student', upload.single('file'
       ContentType: 'application/pdf'
     }));
 
+    // Create or update Report
+    let report = await Report.findOne({ student: studentid, module, day });
+
+    if (!report) {
+      report = new Report({
+        student: studentid,
+        module,
+        day,
+        marksObtained: [-2, -2, -1],
+      });
+    }
+
+    await report.save();
+
     const url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-    res.json({ message: 'Answer uploaded', url });
+    res.json({ message: 'Answer uploaded and report saved', url });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Answer upload failed' });
+    console.error('Upload/DB error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 router.get('/evaluate/:batchId/:module/:title/:day', async (req, res) => {
   const { batchId, module, title, day } = req.params;
 
   try {
-    // 1. Fetch the batch name from MongoDB
     const batchDoc = await Batch.findById(batchId);
     if (!batchDoc) return res.status(404).json({ error: 'Batch not found' });
 
@@ -120,8 +138,6 @@ router.get('/evaluate/:batchId/:module/:title/:day', async (req, res) => {
     const cleanTitle = sanitizeForFolderName(title);
 
     const prefix = `${cleanBatch}/${cleanModule}/${cleanTitle}/assignment/`;
-
-    // 2. List objects in S3 under that assignment folder
     const list = await s3.send(new ListObjectsV2Command({
       Bucket: bucketName,
       Prefix: prefix
@@ -136,9 +152,6 @@ router.get('/evaluate/:batchId/:module/:title/:day', async (req, res) => {
         .map(k => decodeURIComponent(k.split('/')[4])) // folder name = real student name
     )];
 
-    
-
-    // 4. Get corresponding student documents
     const students = await Student.find()
   .populate('user', 'name') // only fetch `name` field from user
   .then(res =>
@@ -192,7 +205,7 @@ router.post('/evaluate', async (req, res) => {
         student: studentId,
         module: module,
         day,
-        marksObtained: [-1, -1, -1],
+        marksObtained: [-2, -2, -2],
       });
     }
 
