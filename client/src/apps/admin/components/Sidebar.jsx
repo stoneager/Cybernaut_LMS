@@ -139,71 +139,67 @@ return (
 
 
         {/* Batches */}
-        <div>
-          <div
-            onClick={toggleBatchSubmenu}
-            className="flex items-center gap-4 px-4 py-3 my-1 rounded-xl cursor-pointer hover:bg-blue-50 text-gray-700 transition-all duration-200 ease-in-out hover:shadow-sm"
-          >
-            <FaChalkboardTeacher className="text-lg text-slate-600" />
-            <span className="text-sm font-semibold tracking-wide text-gray-700">My Batches</span>
-            <FaChevronDown
-              className={`ml-auto transition-transform duration-200 text-slate-600 ${
-                showBatchSubmenu ? "rotate-180" : ""
-              }`}
-            />
-          </div>
+<div>
+  <div
+    onClick={() => {
+      toggleBatchSubmenu();
+      navigate("/admin/batches"); // always navigate to batches on click
+    }}
+    className={`flex items-center gap-4 px-4 py-3 my-1 rounded-xl cursor-pointer transition-all duration-200 ease-in-out ${
+      location.pathname.startsWith("/admin/batch/")
+        ? "bg-gray-200 text-gray-800"
+        : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
+    }`}
+  >
+    <FaChalkboardTeacher className="text-lg text-slate-600" />
+    <span className="text-sm font-semibold tracking-wide">My Batches</span>
+    <FaChevronDown
+      className={`ml-auto transition-transform duration-200 text-slate-600 ${
+        showBatchSubmenu ? "rotate-180" : ""
+      }`}
+    />
+  </div>
 
-          {/* Subtopics if inside a batch */}
-          {showBatchSubmenu && selectedBatchId && (
-            <div className="ml-8 mt-2 space-y-1">
-              <NavLink
-                to={`/admin/batch/${selectedBatchId}/lesson-plan`}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
-                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FaBook className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
-                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Lesson Plan</span>
-                  </>
-                )}
-              </NavLink>
-              <NavLink
-                to={`/admin/batch/${selectedBatchId}/report`}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
-                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FaFileAlt className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
-                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Report</span>
-                  </>
-                )}
-              </NavLink>
-              <NavLink
-                to={`/admin/batch/${selectedBatchId}/chat`}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
-                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FaComments className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
-                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Chat</span>
-                  </>
-                )}
-              </NavLink>
-            </div>
-          )}
-        </div>
+  {/* Subtopics if inside a batch */}
+  {showBatchSubmenu && selectedBatchId && (
+    <div className="ml-8 mt-2 space-y-1">
+      <NavLink
+        to={`/admin/batch/${selectedBatchId}/lesson-plan`}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+            isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
+          }`
+        }
+      >
+        <FaBook className="text-sm" />
+        <span className="text-sm font-medium">Lesson Plan</span>
+      </NavLink>
+      <NavLink
+        to={`/admin/batch/${selectedBatchId}/report`}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+            isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
+          }`
+        }
+      >
+        <FaFileAlt className="text-sm" />
+        <span className="text-sm font-medium">Report</span>
+      </NavLink>
+      <NavLink
+        to={`/admin/batch/${selectedBatchId}/chat`}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+            isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
+          }`
+        }
+      >
+        <FaComments className="text-sm" />
+        <span className="text-sm font-medium">Chat</span>
+      </NavLink>
+    </div>
+  )}
+</div>
+
 
         {/* Students */}
         <NavLink
