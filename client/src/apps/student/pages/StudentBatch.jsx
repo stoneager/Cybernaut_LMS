@@ -128,7 +128,7 @@ export default function StudentBatch() {
                 const fd = new FormData();
                 fd.append('file', note.file);
                 axios.post(
-                  `http://localhost:5002/notes/upload/${encodeURIComponent(batch.batchName)}/${module}/${encodeURIComponent(note.title)}/${encodeURIComponent(student.user.name)}`,
+                  `http://localhost:5002/notes/upload/${encodeURIComponent(batch.batchName)}/${module}/${encodeURIComponent(note.title)}/${encodeURIComponent(student.user.name)}/${student._id}/${note.day}`,
                   fd
                 ).then(() => alert('Answer uploaded')).catch(console.error);
               }}
