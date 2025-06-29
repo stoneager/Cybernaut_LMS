@@ -10,8 +10,9 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Topbar from "./Topbar";
 
-const StudentSidebar = ({ children }) => {
+const Sidebar = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -154,10 +155,15 @@ const StudentSidebar = ({ children }) => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6">{children}</div>
+      {/* Main Content with Topbar */}
+      <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
+        <Topbar pageTitle="Dashboard" userName={student?.user?.name || "Student"} />
+        <div className="p-6">
+          {children}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default StudentSidebar;
+export default Sidebar;

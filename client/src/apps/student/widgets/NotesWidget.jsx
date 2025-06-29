@@ -1,94 +1,65 @@
-import React, { useState } from 'react';
-import { FaTrash, FaCheck } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaTrash } from 'react-icons/fa';
+import axios from 'axios';
 
-function NotesWidget() {
-  const [notes, setNotes] = useState([
-    { id: 1, text: 'Revise Linked Lists', done: false },
-    { id: 2, text: 'Prepare for DSA quiz', done: true },
-  ]);
-  const [noteInput, setNoteInput] = useState('');
+const typeLabels = ['Coding', 'Quiz', 'Assignment'];
 
-  const addNote = () => {
-    if (!noteInput.trim()) return;
-    const newNote = {
-      id: Date.now(),
-      text: noteInput,
-      done: false,
+function NotesWidget({ studentId }) {
+  const [missingNotes, setMissingNotes] = useState([]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5003/api/reports/${studentId}`);
+        const reports = res.data || [];
+
+        const missing = [];
+
+        for (const report of reports) {
+          report.marksObtained.forEach((mark, index) => {
+            if (mark === -2) {
+              missing.push({
+                id: `${report._id}-${index}`,
+                text: `Day ${report.day} - ${report.module} - ${typeLabels[index]} not submitted`
+              });
+            }
+          });
+        }
+
+        setMissingNotes(missing);
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+      }
     };
-    setNotes([newNote, ...notes]);
-    setNoteInput('');
-  };
 
-  const toggleDone = (id) => {
-    setNotes(
-      notes.map((note) =>
-        note.id === id ? { ...note, done: !note.done } : note
-      )
-    );
-  };
+    if (studentId) fetchReports();
+  }, [studentId]);
 
   const deleteNote = (id) => {
-    setNotes(notes.filter((note) => note.id !== id));
+    setMissingNotes(missingNotes.filter((note) => note.id !== id));
   };
 
   return (
     <div className="bg-white p-6 rounded-md shadow max-w-sm mx-auto mt-6">
-      <h3 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+      <h3 className="text-xl font-semibold text-gray-700 mb-4">Your Reminders</h3>
 
-         Your Reminders
-
-      </h3>
-
-      {/* Input area */}
-      <div className="flex items-center mb-4">
-        <input
-          type="text"
-          value={noteInput}
-          onChange={(e) => setNoteInput(e.target.value)}
-          placeholder="Write a note..."
-          className="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-        <button
-          onClick={addNote}
-          className="ml-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-        >
-          Add
-        </button>
-      </div>
-
-      {/* Notes list */}
       <ul className="space-y-3">
-        {notes.length === 0 ? (
-          <li className="text-sm text-gray-400">No notes yet.</li>
+        {missingNotes.length === 0 ? (
+          <li className="text-sm text-gray-400">No missing work 🎉</li>
         ) : (
-          notes.map((note) => (
+          missingNotes.map((note) => (
             <li
               key={note.id}
               className="flex justify-between items-start p-3 border rounded-md bg-gray-50"
             >
-              <span
-                className={`text-sm flex-1 break-words whitespace-normal ${
-                  note.done ? 'line-through text-gray-400' : 'text-gray-800'
-                }`}
+              <span className="text-sm text-gray-800 break-words">{note.text}</span>
+              <button
+                onClick={() => deleteNote(note.id)}
+                className="text-red-500 hover:text-red-700 ml-2"
+                title="Dismiss"
               >
-                {note.text}
-              </span>
-              <div className="flex space-x-3 ml-4 mt-1 shrink-0">
-                <button
-                  onClick={() => toggleDone(note.id)}
-                  className="text-green-600 hover:text-green-800"
-                  title="Mark as done"
-                >
-                  <FaCheck />
-                </button>
-                <button
-                  onClick={() => deleteNote(note.id)}
-                  className="text-red-500 hover:text-red-700"
-                  title="Delete"
-                >
-                  <FaTrash />
-                </button>
-              </div>
+                <FaTrash />
+              </button>
             </li>
           ))
         )}

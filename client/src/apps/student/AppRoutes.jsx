@@ -3,7 +3,7 @@ import PrivateRoute from './components/PrivateRoute';
 import StudentHome from './pages/StudentHome';
 import StudentChat from './pages/StudentChat';
 import StudentBatch from './pages/StudentBatch';
-import StudentSidebar from './pages/StudentSidebar';
+import Sidebar from './components/Sidebar';
 import { ToastContainer } from 'react-toastify';
 import Settings from './pages/Settings';
 
@@ -16,9 +16,9 @@ function AppRoutes() {
           path="/"
           element={
             <PrivateRoute>
-              <StudentSidebar>
+              <Sidebar>
                 <StudentHome />
-              </StudentSidebar>
+              </Sidebar>
             </PrivateRoute>
           }
         />
@@ -27,9 +27,9 @@ function AppRoutes() {
           path="/chat/:module/:type"
           element={
             <PrivateRoute>
-              <StudentSidebar>
+              <Sidebar>
                 <StudentChat />
-              </StudentSidebar>
+              </Sidebar>
             </PrivateRoute>
           }
         />
@@ -38,9 +38,9 @@ function AppRoutes() {
           path="/batch/:batchId"
           element={
             <PrivateRoute>
-              <StudentSidebar>
+              <Sidebar>
                 <StudentBatch />
-              </StudentSidebar>
+              </Sidebar>
             </PrivateRoute>
           }
         />
@@ -49,9 +49,9 @@ function AppRoutes() {
           path="/chat"
           element={
             <PrivateRoute>
-              <StudentSidebar>
+              <Sidebar>
                 <StudentChat />
-              </StudentSidebar>
+              </Sidebar>
             </PrivateRoute>
           }
         />
@@ -60,9 +60,9 @@ function AppRoutes() {
           path="/settings"
           element={
             <PrivateRoute>
-              <StudentSidebar>
+              <Sidebar>
                 <Settings />
-              </StudentSidebar>
+              </Sidebar>
             </PrivateRoute>
           }
         />
