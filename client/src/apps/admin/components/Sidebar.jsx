@@ -187,21 +187,6 @@ return (
                 )}
               </NavLink>
               <NavLink
-                to={`/admin/batch/${selectedBatchId}/evaluation`}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
-                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <FaClipboardCheck className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
-                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Evaluation</span>
-                  </>
-                )}
-              </NavLink>
-              <NavLink
                 to={`/admin/batch/${selectedBatchId}/chat`}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
