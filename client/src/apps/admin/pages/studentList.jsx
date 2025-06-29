@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import AdminLeaderboard from "./AdminLeaderboard";
 export default function StudentList() {
   const [students, setStudents] = useState([]);
   const [batchOptions, setBatchOptions] = useState([]);
@@ -68,49 +68,7 @@ export default function StudentList() {
     <div className="p-8 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
 
-      {/* Leaderboard */}
-      <div className="bg-white p-6 rounded-xl shadow-md border mb-10 max-w-2xl">
-        <div className="flex flex-wrap gap-3 items-center mb-4">
-          <h3 className="text-lg font-semibold text-blue-900">Top Performers</h3>
-
-          {/* Module Filter */}
-          <select
-            value={leaderboardModule}
-            onChange={(e) => setLeaderboardModule(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {availableModules.map((mod, i) => (
-              <option key={i} value={mod}>{mod}</option>
-            ))}
-          </select>
-
-          {/* Batch Filter */}
-          <select
-            value={leaderboardBatchId}
-            onChange={(e) => setLeaderboardBatchId(e.target.value)}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {batchOptions.map((batch) => (
-              <option key={batch._id} value={batch._id}>
-                {batch.batchName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {leaderboard.length === 0 ? (
-          <p className="text-gray-500 text-sm">No data available</p>
-        ) : (
-          <ul className="divide-y divide-gray-200">
-            {leaderboard.map((entry, index) => (
-              <li key={index} className="py-2 flex justify-between">
-                <span className="text-gray-800 font-medium">{entry.name}</span>
-                <span className="text-blue-700 font-semibold">{entry.avg} / 100</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <AdminLeaderboard/>
 
       {/* Search and filter */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">

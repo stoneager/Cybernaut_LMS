@@ -63,66 +63,71 @@ router.get('/leaderboard', verifyAccessToken, async (req, res) => {
     // 1. Get student IDs in the batch
     const studentIds = await Student.find({ batch: batchId }).distinct('_id');
     if (studentIds.length === 0) return res.json([]);
-
     // 2. Aggregate avg marks per student in the module
     const topStudents = await Report.aggregate([
-      {
-        $match: {
-          student: { $in: studentIds },
-          module,
-        },
-      },
-      {
-        $group: {
-          _id: "$student",
-          total: {
-            $sum: {
-              $sum: "$marksObtained"
-            }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          avg: {
-            $divide: ["$total", { $multiply: ["$count", 3] }]
-          }
-        }
-      },
-      {
-        $sort: { avg: -1 }
-      },
-      { $limit: 3 },
-      {
-        $lookup: {
-          from: 'students',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'student'
-        }
-      },
-      {
-        $unwind: "$student"
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'student.user',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      {
-        $unwind: "$user"
-      },
-      {
-        $project: {
-          name: "$user.name",
-          avg: { $round: ["$avg", 2] }
+  {
+    $match: {
+      student: { $in: studentIds },
+      module
+    }
+  },
+  {
+    $project: {
+      student: 1,
+      validMarks: {
+        $filter: {
+          input: "$marksObtained",
+          as: "mark",
+          cond: { $gte: ["$$mark", 0] }
         }
       }
-    ]);
+    }
+  },
+  {
+    $group: {
+      _id: "$student",
+      total: { $sum: { $sum: "$validMarks" } },
+      count: { $sum: { $size: "$validMarks" } }
+    }
+  },
+  {
+    $project: {
+      avg: {
+        $cond: [
+          { $eq: ["$count", 0] },
+          0,
+          { $divide: ["$total", "$count"] }
+        ]
+      }
+    }
+  },
+  { $sort: { avg: -1 } },
+  { $limit: 5 },
+  {
+    $lookup: {
+      from: 'students',
+      localField: '_id',
+      foreignField: '_id',
+      as: 'student'
+    }
+  },
+  { $unwind: "$student" },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'student.user',
+      foreignField: '_id',
+      as: 'user'
+    }
+  },
+  { $unwind: "$user" },
+  {
+    $project: {
+      name: "$user.name",
+      avg: { $round: ["$avg", 2] }
+    }
+  }
+]);
 
     res.json(topStudents);
   } catch (err) {
