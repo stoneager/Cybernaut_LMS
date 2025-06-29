@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-purple-100 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 via-white to-white p-6">
       <div className="bg-white shadow-2xl rounded-3xl flex w-full max-w-5xl overflow-hidden">
         {/* Left Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
