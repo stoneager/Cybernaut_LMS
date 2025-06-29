@@ -51,13 +51,13 @@ const filterStudents = () => {
 
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-gray-50 min-h-[90%]">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Student Management</h1>
       </div>
 
       {/* Summary Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div className="bg-white rounded shadow p-4 text-center">
           <h4 className="text-sm text-gray-500">Total Students</h4>
           <p className="text-xl font-semibold">{filteredStudents.length}</p>

@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Topbar from "./Topbar";
 
 const Sidebar = ({ children }) => {
   const navigate = useNavigate();
@@ -80,100 +81,140 @@ const Sidebar = ({ children }) => {
     }
   };
 
+  // Function to get page title based on current route
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path === "/admin/" || path === "/admin") return "Dashboard";
+    if (path === "/admin/batches") return "My Batches";
+    if (path === "/admin/students") return "My Students";
+    if (path === "/admin/settings") return "Settings";
+    if (path === "/admin/superadmin-chat") return "SuperAdmin Chat";
+    if (path.includes("/lesson-plan")) return "Lesson Plan";
+    if (path.includes("/evaluation")) return "Evaluation";
+    if (path.includes("/report")) return "Report";
+    if (path.includes("/chat")) return "Batch Chat";
+    return "Admin Dashboard";
+  };
+
 return (
   <div className="flex h-screen bg-[#f4f7fa]">
     {/* Sidebar */}
-    <div className="group flex flex-col shadow-xl transition-all duration-300 ease-in-out w-16 hover:w-72 bg-gradient-to-b from-[#1f2e49] to-[#293b5f] text-white relative overflow-hidden">
+    <div className="flex flex-col w-64 bg-white border-r border-gray-200 shadow-sm relative">
 
       {/* Profile */}
-      <div className="flex flex-col items-center justify-center py-6 border-b border-blue-900 bg-[#1a253b] transition-all duration-300 ease-in-out">
-        <FaUserCircle className="text-3xl group-hover:text-5xl text-gray-300" />
-        <h2 className="text-[0px] group-hover:text-lg font-semibold mt-1 transition-all duration-300 ease-in-out">
-          {profile.name}
-        </h2>
-        <p className="text-[0px] group-hover:text-xs text-gray-400 transition-all duration-300 ease-in-out">
-          {profile.email}
-        </p>
+      <div className="border-b border-gray-200 h-20 flex items-center px-4">
+        <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-xl border border-blue-100 w-full">
+          <div className="relative">
+            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white shadow-sm">
+              <FaUserCircle className="text-lg" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900">{profile.name || "Admin User"}</p>
+            <p className="text-xs text-gray-500 font-medium">Administrator</p>
+          </div>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 group-hover:px-5 py-6 space-y-2 text-sm font-medium transition-all">
+      <nav className="flex-1 px-3 py-6">
         {/* Home */}
         <NavLink
-  to="/admin/"
-  end
-  className={({ isActive }) =>
-    `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-      isActive ? "bg-[#395886]" : "hover:bg-[#2c3f64]"
-    }`
-  }
->
-  <FaHome className="text-base" />
-  <span className="hidden group-hover:inline">Home</span>
-</NavLink>
+          to="/admin/"
+          end
+          className={({ isActive }) =>
+            `flex items-center gap-4 px-4 py-3 my-1 rounded-xl text-left transition-all duration-200 ease-in-out ${
+              isActive ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20" : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <FaHome className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Dashboard</span>
+            </>
+          )}
+        </NavLink>
 
 
         {/* Batches */}
         <div>
           <div
             onClick={toggleBatchSubmenu}
-            className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-[#2c3f64] transition"
+            className="flex items-center gap-4 px-4 py-3 my-1 rounded-xl cursor-pointer hover:bg-blue-50 text-gray-700 transition-all duration-200 ease-in-out hover:shadow-sm"
           >
-            <FaChalkboardTeacher />
-            <span className="hidden group-hover:inline">Batches</span>
+            <FaChalkboardTeacher className="text-lg text-slate-600" />
+            <span className="text-sm font-semibold tracking-wide text-gray-700">My Batches</span>
             <FaChevronDown
-              className={`ml-auto transition-transform ${
+              className={`ml-auto transition-transform duration-200 text-slate-600 ${
                 showBatchSubmenu ? "rotate-180" : ""
-              } hidden group-hover:inline`}
+              }`}
             />
           </div>
 
           {/* Subtopics if inside a batch */}
           {showBatchSubmenu && selectedBatchId && (
-            <div className="ml-4 mt-2 border-l-2 border-blue-700 pl-2 space-y-1 text-sm text-blue-100 hidden group-hover:block">
+            <div className="ml-8 mt-2 space-y-1">
               <NavLink
                 to={`/admin/batch/${selectedBatchId}/lesson-plan`}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-2 py-1 rounded-md ${
-                    isActive ? "bg-[#476da4]" : "hover:bg-[#3b578c]"
+                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
                   }`
                 }
               >
-                <FaBook className="text-sm" />
-                <span>Lesson Plan</span>
+                {({ isActive }) => (
+                  <>
+                    <FaBook className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
+                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Lesson Plan</span>
+                  </>
+                )}
               </NavLink>
               <NavLink
                 to={`/admin/batch/${selectedBatchId}/report`}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-2 py-1 rounded-md ${
-                    isActive ? "bg-[#476da4]" : "hover:bg-[#3b578c]"
+                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
                   }`
                 }
               >
-                <FaFileAlt className="text-sm" />
-                <span>Report</span>
+                {({ isActive }) => (
+                  <>
+                    <FaFileAlt className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
+                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Report</span>
+                  </>
+                )}
               </NavLink>
               <NavLink
                 to={`/admin/batch/${selectedBatchId}/evaluation`}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-2 py-1 rounded-md ${
-                    isActive ? "bg-[#476da4]" : "hover:bg-[#3b578c]"
+                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
                   }`
                 }
               >
-                <FaClipboardCheck className="text-sm" />
-                <span>Evaluation</span>
+                {({ isActive }) => (
+                  <>
+                    <FaClipboardCheck className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
+                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Evaluation</span>
+                  </>
+                )}
               </NavLink>
               <NavLink
                 to={`/admin/batch/${selectedBatchId}/chat`}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-2 py-1 rounded-md ${
-                    isActive ? "bg-[#476da4]" : "hover:bg-[#3b578c]"
+                  `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+                    isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
                   }`
                 }
               >
-                <FaComments className="text-sm" />
-                <span>Chat</span>
+                {({ isActive }) => (
+                  <>
+                    <FaComments className={`text-sm ${isActive ? "text-white" : "text-slate-600"}`} />
+                    <span className={`text-sm font-medium ${isActive ? "text-white" : "text-gray-600"}`}>Chat</span>
+                  </>
+                )}
               </NavLink>
             </div>
           )}
@@ -183,56 +224,71 @@ return (
         <NavLink
           to="/admin/students"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-              isActive ? "bg-[#395886]" : "hover:bg-[#2c3f64]"
+            `flex items-center gap-4 px-4 py-3 my-1 rounded-xl text-left transition-all duration-200 ease-in-out ${
+              isActive ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20" : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
             }`
           }
         >
-          <FaUsers />
-          <span className="hidden group-hover:inline">My Students</span>
+          {({ isActive }) => (
+            <>
+              <FaUsers className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>My Students</span>
+            </>
+          )}
         </NavLink>
 
         {/* Settings */}
         <NavLink
           to="/admin/settings"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-              isActive ? "bg-[#395886]" : "hover:bg-[#2c3f64]"
+            `flex items-center gap-4 px-4 py-3 my-1 rounded-xl text-left transition-all duration-200 ease-in-out ${
+              isActive ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20" : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
             }`
           }
         >
-          <FaCog />
-          <span className="hidden group-hover:inline">Settings</span>
+          {({ isActive }) => (
+            <>
+              <FaCog className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Settings</span>
+            </>
+          )}
         </NavLink>
 
         {/* SuperAdmin Chat */}
         <NavLink
           to="/admin/superadmin-chat"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-md transition ${
-              isActive ? "bg-[#395886]" : "hover:bg-[#2c3f64]"
+            `flex items-center gap-4 px-4 py-3 my-1 rounded-xl text-left transition-all duration-200 ease-in-out ${
+              isActive ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20" : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
             }`
           }
         >
-          <FaComments />
-          <span className="hidden group-hover:inline">SuperAdmin Chat</span>
+          {({ isActive }) => (
+            <>
+              <FaComments className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Support Chat</span>
+            </>
+          )}
         </NavLink>
       </nav>
 
       {/* Logout */}
-      <div className="px-2 group-hover:px-5 pb-6">
+      <div className="p-4 border-t border-gray-200">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center group-hover:justify-start gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 text-base font-semibold text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 border-2 border-red-600 rounded-xl transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-red-600/25 transform hover:scale-105"
         >
-          <FaSignOutAlt />
-          <span className="hidden group-hover:inline">Logout</span>
+          <FaSignOutAlt className="text-xl" />
+          <span className="tracking-wide">Sign Out</span>
         </button>
       </div>
     </div>
 
-    {/* Main content */}
-    <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6">{children}</div>
+    {/* Main content area with Topbar */}
+    <div className="flex-1 flex flex-col">
+      <Topbar pageTitle={getPageTitle()} />
+      <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6">{children}</div>
+    </div>
   </div>
 );
 }

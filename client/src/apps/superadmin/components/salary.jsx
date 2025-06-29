@@ -41,9 +41,9 @@ export default function Salary() {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-br from-white via-blue-50 to-white min-h-screen text-black">
+    <div className="bg-gradient-to-br from-white via-blue-50 to-white min-h-screen text-black">
       
-      <h2 className="text-3xl font-bold mb-6 text-blue-900">💰 Salary Payments</h2>
+      <h2 className="text-3xl font-bold mb-6 text-blue-900">Salary Payments</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-sm border border-blue-200 rounded-lg overflow-hidden shadow-md">
           <thead className="bg-blue-900 text-white text-left">

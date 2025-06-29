@@ -185,8 +185,8 @@ const handleSave = async () => {
   );
 
   return (
-    <div className="p-6 text-blue-900 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">Batch Management</h1>
+    <div className="p-4 text-blue-900 space-y-6">
+      <h1 className="text-2xl font-bold mb-2">Batch Management</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="p-4 bg-white border shadow rounded-lg">
@@ -237,32 +237,7 @@ const handleSave = async () => {
               <th className="p-3">Actions</th>
             </tr>
           </thead>
-          <tbody className="text-sm">
-            {filteredBatches.map(batch => (
-              <tr key={batch._id} className="border-t">
-                <td className="p-3 font-medium">{batch.batchName}</td>
-                <td className="p-3">{batch.course?.courseName}</td>
-                <td className="p-3">
-                  {batch.admins.map((a, index) => (
-                    <div key={index}>{a.module} - {a.admin?.name}</div>
-                  ))}
-                </td>
-                <td className="p-3">{new Date(batch.startDate).toLocaleDateString()}</td>
-                <td className="p-3">{batch.studentCount}</td>
-                <td className="p-3">
-                  <button
-                    onClick={() => {
-                      setShowModal2({ show: true, course: batch.course, batchId: batch._id });
-                      setStudents([]); setSelected({}); setCredentials([]);
-                    }}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Add Students
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+             
         </table>
       </div>
 
