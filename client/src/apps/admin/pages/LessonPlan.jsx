@@ -1,6 +1,9 @@
+// LessonPlan.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { FaPlus, FaEdit, FaFlask, FaLink, FaFilePdf } from 'react-icons/fa';
+
 export default function LessonPlan() {
   const { batchId } = useParams();
   const navigate = useNavigate();
@@ -12,8 +15,10 @@ export default function LessonPlan() {
   const [notes, setNotes] = useState([]);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalData, setEvalData] = useState(null);
   const [batchDetails, setBatchDetails] = useState({});
+
   const backendBase = 'http://localhost:5002';
   const token = localStorage.getItem('token');
 
@@ -71,6 +76,16 @@ export default function LessonPlan() {
     setShowModal(true);
   };
 
+  const openEvalModal = async (note) => {
+    try {
+      const res = await axios.get(`${backendBase}/evaluate/${batchId}/${selectedModule}/${note.title}/${note.day}`);
+      setEvalData({ title: note.title, day: note.day, submissions: res.data });
+      setShowEvalModal(true);
+    } catch (err) {
+      console.error("Failed to load submissions", err);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.title || !form.day) return alert('Please fill title and day');
     try {
@@ -120,168 +135,188 @@ export default function LessonPlan() {
     }
   };
 
-  if (!selectedModule) return null;
+  const handleEvaluate = async (studentId, marks, setMarks) => {
+    const mark = parseInt(marks[studentId]);
+    if (isNaN(mark) || mark < 0 || mark > 100) {
+      alert("Please enter a valid mark between 0 and 100");
+      return;
+    }
+    try {
+      await axios.post(`${backendBase}/evaluate`, {
+        studentId,
+        module: selectedModule,
+        day: evalData.day,
+        mark
+      });
+      const res = await axios.get(`${backendBase}/evaluate/${batchId}/${selectedModule}/${evalData.title}/${evalData.day}`);
+      setEvalData(prev => ({ ...prev, submissions: res.data }));
+    } catch (err) {
+      console.error("Error submitting marks", err);
+    }
+  };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      {/* Module Filter */}
-      {modules.length > 1 && (
-        <div className="flex gap-3 mb-4">
-          {modules.map(mod => (
-            <button
-              key={mod}
-              onClick={() => setSelectedModule(mod)}
-              className={`px-4 py-1 rounded-full border ${
-                selectedModule === mod ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'
-              }`}
-            >
-              {mod}
-            </button>
-          ))}
-        </div>
+    <div className="max-w-6xl mx-auto p-6">
+      {/* Module switch buttons */}
+{modules.length > 1 && (
+  <div className="flex gap-3 mb-6">
+    {modules.map(mod => (
+      <button
+        key={mod}
+        onClick={() => setSelectedModule(mod)}
+        className={`px-4 py-1 rounded-full border text-sm font-medium transition-all ${
+          selectedModule === mod ? 'bg-black text-white border-black' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'
+        }`}
+      >
+        {mod}
+      </button>
+    ))}
+  </div>
+)}
+
+{/* Page heading and Add Note button */}
+<div className="flex justify-between items-center mb-10">
+  <h2 className="text-2xl font-bold text-gray-900">
+    Lesson Plan: <span className="text-blue-600">{batchDetails.batchName}</span> <span className="text-gray-500 text-base">({batchDetails.courseName})</span> – <span className="text-indigo-600">{selectedModule}</span>
+  </h2>
+  <button
+    onClick={openModalForAdd}
+    className="flex items-center gap-2 px-5 py-2 text-white bg-black rounded-lg hover:bg-gray-800 transition"
+  >
+    <FaPlus /> Add Note
+  </button>
+</div>
+
+{/* Latest note display */}
+{notes.length > 0 && (
+  <div className="bg-white shadow-sm border rounded-xl p-6 mb-8">
+    <div className="flex justify-between items-center">
+      <h3 className="text-lg font-semibold text-gray-800">Day {notes[0].day}: {notes[0].title}</h3>
+      <a
+        href={notes[0].meetlink}
+        target="_blank"
+        rel="noreferrer"
+        className="text-sm px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+      >
+        Join Meet
+      </a>
+    </div>
+
+    <div className="text-sm mt-4 grid grid-cols-1 md:grid-cols-3 gap-20">
+      <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
+        <FaLink className="text-sm" /> Quiz
+      </a>
+      {notes[0].assignmentlink && (
+        <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
+          <FaLink className="text-sm" /> Assignment
+        </a>
       )}
+      {notes[0].assignmentS3Url && (
+        <a href={notes[0].assignmentS3Url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
+          <FaFilePdf className="text-sm" /> PDF
+        </a>
+      )}
+    </div>
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-blue-900">
-          Lesson Plan – {batchDetails.batchName}
-          <span className="text-gray-500 text-xl"> ({batchDetails.courseName})</span>
-          <span className="text-sm text-indigo-600 ml-2 font-medium">– Module: {selectedModule}</span>
-        </h2>
-        <button
-          className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-lg hover:shadow-md transition-all"
-          onClick={openModalForAdd}
-        >
-          + Add Note
-        </button>
-      </div>
+    <div className="flex gap-4 mt-6">
+      <button
+        onClick={() => openEvalModal(notes[0])}
+        className="flex items-center justify-center gap-2 w-32 px-3 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm"
+      >
+        <FaFlask className="text-sm" /> Evaluate
+      </button>
+      <button
+        onClick={() => openModalForEdit(notes[0])}
+        className="flex items-center justify-center gap-2 w-32 px-3 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm"
+      >
+        <FaEdit className="text-sm" /> Edit
+      </button>
+    </div>
+  </div>
+)}
 
-      {/* Latest Note */}
-      {notes.length > 0 && (
-        <div className="bg-white shadow-md rounded-xl p-6 mb-6 border border-gray-200">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-semibold text-gray-800">
-              📘 Day {notes[0].day}: {notes[0].title}
-            </h3>
-            <a
-              href={notes[0].meetlink}
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full hover:bg-gray-700 transition"
-            >
-              Join Meeting
-            </a>
-          </div>
-
-          <div className="space-y-1 text-sm text-gray-700 mt-2">
-            <p>📝 Quiz: <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View Quiz</a></p>
-            {notes[0].assignmentlink && (
-              <p>🔗 Assignment: <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="text-green-600 hover:underline">View Assignment</a></p>
-            )}
-            {notes[0].assignmentS3Url && (
-              <p>📄 PDF: <a href={notes[0].assignmentS3Url} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">Download</a></p>
-            )}
-            <button
-              onClick={() => navigate(`/admin/evaluate/${batchId}/${selectedModule}/${encodeURIComponent(notes[0].title)}/${notes[0].day}`)}
-              className="text-sm text-green-700 hover:underline ml-4"
-            >
-              🧪 Evaluate
-            </button>
-          </div>
-
+{/* Older notes display */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {notes.slice(1).map(note => (
+    <div
+      key={note._id}
+      className="bg-white p-5 rounded-lg border hover:shadow-sm cursor-pointer"
+      onClick={() => setNotes(prev => {
+        const updated = [...prev];
+        const idx = updated.findIndex(n => n._id === note._id);
+        if (idx > -1) {
+          const [moved] = updated.splice(idx, 1);
+          updated.unshift(moved);
+        }
+        return updated;
+      })}
+    >
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="font-semibold text-gray-800">Day {note.day}: {note.title}</p>
+          <p className="text-xs text-gray-400">{new Date(note.createdAt).toLocaleDateString()}</p>
+        </div>
+        <div className="flex flex-col gap-2 items-end">
           <button
-            onClick={() => openModalForEdit(notes[0])}
-            className="mt-3 text-sm text-blue-600 hover:underline"
+            onClick={e => { e.stopPropagation(); openModalForEdit(note); }}
+            className="flex items-center justify-center gap-2 w-32 px-3 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm"
           >
-            ✏️ Edit
+            <FaEdit className="text-sm" /> Edit
+          </button>
+          <button
+            onClick={e => { e.stopPropagation(); openEvalModal(note); }}
+            className="flex items-center justify-center gap-2 w-32 px-3 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm"
+          >
+            <FaFlask className="text-sm" /> Evaluate
           </button>
         </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+      
+      {/* Evaluation Modal */}
+      {showEvalModal && evalData && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-8 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
+              onClick={() => setShowEvalModal(false)}
+            >✕</button>
+            <h2 className="text-2xl font-bold mb-6 text-blue-800">
+              Pending Assignment Evaluation – {decodeURIComponent(evalData.title)}
+            </h2>
+            {evalData.submissions.length === 0 ? (
+              <p className="text-gray-600">No submissions found yet.</p>
+            ) : (
+              <EvaluationTable
+                submissions={evalData.submissions}
+                handleEvaluate={handleEvaluate}
+              />
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Older Notes */}
-      <div className="space-y-4">
-        {notes.slice(1).map(note => (
-          <div
-            key={note._id}
-            className="bg-white border hover:shadow-md cursor-pointer transition-all p-4 rounded-lg"
-            onClick={() => {
-              setNotes(prev => {
-                const updated = [...prev];
-                const idx = updated.findIndex(n => n._id === note._id);
-                if (idx > -1) {
-                  const [moved] = updated.splice(idx, 1);
-                  updated.unshift(moved);
-                }
-                return updated;
-              });
-            }}
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-semibold text-gray-800">📘 Day {note.day}: {note.title}</p>
-                <p className="text-xs text-gray-500">Added on {new Date(note.createdAt).toLocaleDateString()}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModalForEdit(note);
-                  }}
-                  className="text-sm text-blue-700 underline"
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/admin/evaluate/${batchId}/${selectedModule}/${encodeURIComponent(note.title)}/${note.day}`);
-                  }}
-                  className="text-sm text-green-600 hover:underline"
-                >
-                  🧪 Evaluate
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Modal */}
+      {/* Add/Edit Note Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-8 relative">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
               onClick={() => setShowModal(false)}
-            >
-              ✕
-            </button>
-            <h3 className="text-2xl font-bold mb-4 text-blue-900">
-              {editingNoteId ? 'Edit Note' : 'Add Note'} – {selectedModule}
-            </h3>
+            >✕</button>
+            <h3 className="text-2xl font-bold mb-6 text-gray-900">{editingNoteId ? 'Edit' : 'Add'} Note – {selectedModule}</h3>
 
             <div className="space-y-4">
-              <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })} />
-
-              <input className="w-full border p-3 rounded-lg" placeholder="Meet Link" value={form.meetlink}
-                onChange={e => setForm({ ...form, meetlink: e.target.value })} />
-
-              <input className="w-full border p-3 rounded-lg" placeholder="Quiz Link" value={form.quizlink}
-                onChange={e => setForm({ ...form, quizlink: e.target.value })} />
-
-              <input className="w-full border p-3 rounded-lg" placeholder="External Assignment Link" value={form.assignmentlink}
-                onChange={e => setForm({ ...form, assignmentlink: e.target.value })} />
-
-              <input type="number" className="w-full border p-3 rounded-lg" placeholder="Day" value={form.day}
-                onChange={e => setForm({ ...form, day: e.target.value })} />
-
-              <input type="file" accept="application/pdf"
-                className="w-full p-2 border border-dashed border-gray-400 rounded-lg bg-gray-50"
-                onChange={e => setPdfFile(e.target.files[0])} />
-
-              <button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg hover:shadow-lg"
-                onClick={handleSubmit}>
+              <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              <input className="w-full border p-3 rounded-lg" placeholder="Meet Link" value={form.meetlink} onChange={e => setForm({ ...form, meetlink: e.target.value })} />
+              <input className="w-full border p-3 rounded-lg" placeholder="Quiz Link" value={form.quizlink} onChange={e => setForm({ ...form, quizlink: e.target.value })} />
+              <input className="w-full border p-3 rounded-lg" placeholder="External Assignment Link" value={form.assignmentlink} onChange={e => setForm({ ...form, assignmentlink: e.target.value })} />
+              <input type="number" className="w-full border p-3 rounded-lg" placeholder="Day" value={form.day} onChange={e => setForm({ ...form, day: e.target.value })} />
+              <input type="file" accept="application/pdf" className="w-full border p-2 rounded-lg bg-gray-100" onChange={e => setPdfFile(e.target.files[0])} />
+              <button onClick={handleSubmit} className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800">
                 {editingNoteId ? 'Update Note' : 'Add Note'}
               </button>
             </div>
@@ -289,5 +324,52 @@ export default function LessonPlan() {
         </div>
       )}
     </div>
+  );
+}
+
+function EvaluationTable({ submissions, handleEvaluate }) {
+  const [marks, setMarks] = useState({});
+
+  return (
+    <table className="w-full table-auto border border-gray-300 shadow">
+      <thead className="bg-blue-100">
+        <tr>
+          <th className="p-3 border">#</th>
+          <th className="p-3 border">Student Name</th>
+          <th className="p-3 border">Download Link</th>
+          <th className="p-3 border">Marks</th>
+          <th className="p-3 border">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {submissions.map((sub, index) => (
+          <tr key={index} className="text-sm">
+            <td className="p-3 border text-center">{index + 1}</td>
+            <td className="p-3 border">{sub.studentName}</td>
+            <td className="p-3 border text-center">
+              <a href={sub.answerLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View PDF</a>
+            </td>
+            <td className="p-3 border text-center">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                className="w-20 p-1 border rounded"
+                value={marks[sub.studentId] || ''}
+                onChange={(e) => setMarks(prev => ({ ...prev, [sub.studentId]: e.target.value }))}
+              />
+            </td>
+            <td className="p-3 border text-center">
+              <button
+                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                onClick={() => handleEvaluate(sub.studentId, marks, setMarks)}
+              >
+                Evaluate
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
