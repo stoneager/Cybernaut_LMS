@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaVideo, FaQuestionCircle, FaFileAlt, FaUpload } from 'react-icons/fa';
 
 export default function StudentBatch() {
   const { batchId } = useParams();
@@ -9,6 +8,7 @@ export default function StudentBatch() {
   const [batch, setBatch] = useState(null);
   const [notesMap, setNotesMap] = useState({});
   const [activeModule, setActiveModule] = useState(null);
+  const [reports, setReports] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function StudentBatch() {
   }, [navigate]);
 
   useEffect(() => {
-    const fetchBatch = async () => {
+    const fetchBatchAndNotes = async () => {
       try {
         const res = await axios.get(`http://localhost:5003/student/batch/by-id/${batchId}`);
         setBatch(res.data);
@@ -65,11 +65,31 @@ export default function StudentBatch() {
       }
     };
 
-    if (batchId) fetchBatch();
+    if (batchId) fetchBatchAndNotes();
   }, [batchId]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        if (!student?._id) return;
+        const res = await axios.get(`http://localhost:5003/api/reports/${student._id}`);
+        setReports(res.data);
+      } catch (err) {
+        console.error("Error fetching reports:", err);
+      }
+    };
+
+    if (student) fetchReports();
+  }, [student]);
+
+  const getAssignmentMark = (module, day) => {
+    const match = reports.find(r => r.module === module && r.day === day);
+    return match ? match.marksObtained?.[2] ?? -2 : -2;
+  };
 
   const renderNoteCard = (note, student, batchId, module, large = false, index = 0) => {
     const isEven = index % 2 === 0;
+    const mark = getAssignmentMark(module, note.day);
 
     const viewAssignment = async () => {
       try {
@@ -88,51 +108,65 @@ export default function StudentBatch() {
     return (
       <div
         key={note._id}
-        className={`bg-white border border-gray-200 rounded-xl shadow-md p-5 flex flex-col gap-4 transition hover:shadow-lg`}
+        className={`bg-white border border-blue-100 rounded-xl shadow-md p-5 flex flex-col md:flex-row gap-6 items-center transition hover:shadow-lg ${
+          isEven ? 'md:flex-row' : 'md:flex-row-reverse'
+        }`}
       >
-        <h4 className="text-lg font-semibold text-gray-800">Day {note.day}: {note.title}</h4>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => window.open(note.meetlink, '_blank')}
-            className="flex items-center gap-2 text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-          >
-            <FaVideo /> Join Meet
-          </button>
-          <button
-            onClick={() => window.open(note.quizlink, '_blank')}
-            className="flex items-center gap-2 text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-          >
-            <FaQuestionCircle /> Attempt Quiz
-          </button>
-          <button
-            onClick={viewAssignment}
-            className="flex items-center gap-2 text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-          >
-            <FaFileAlt /> View Assignment
-          </button>
-        </div>
-        <div className="flex items-center gap-3 mt-2">
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={e => note.file = e.target.files[0]}
-            className="border border-gray-300 px-3 py-2 rounded text-sm w-full"
-          />
-          <button
-            title="Upload Answer"
-            onClick={() => {
-              if (!note.file) return alert('Choose a PDF');
-              const fd = new FormData();
-              fd.append('file', note.file);
-              axios.post(
-                `http://localhost:5002/notes/upload/${encodeURIComponent(batch.batchName)}/${module}/${encodeURIComponent(note.title)}/${encodeURIComponent(student.user.name)}/${student._id}/${note.day}`,
-                fd
-              ).then(() => alert('Answer uploaded')).catch(console.error);
-            }}
-            className="bg-black text-white p-3 rounded-full hover:bg-gray-800"
-          >
-            <FaUpload />
-          </button>
+        <div className="flex-1">
+          <h4 className="text-lg font-semibold text-gray-900 mb-3">{"Day "+note.day+" : "+note.title}</h4>
+
+          <div className="mb-4 flex flex-wrap gap-3">
+            <button
+              onClick={() => window.open(note.meetlink, '_blank')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm transition"
+            >
+              Join Meet
+            </button>
+            <button
+              onClick={() => window.open(note.quizlink, '_blank')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm transition"
+            >
+              Attempt Quiz
+            </button>
+            <button
+              onClick={viewAssignment}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm transition"
+            >
+              View Assignment
+            </button>
+          </div>
+
+          {/* Upload / Status */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {mark === -2 ? (
+              <>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => note.file = e.target.files[0]}
+                  className="flex-1 border border-gray-300 px-3 py-2 rounded-md text-sm"
+                />
+                <button
+                  onClick={() => {
+                    if (!note.file) return alert('Choose a PDF');
+                    const fd = new FormData();
+                    fd.append('file', note.file);
+                    axios.post(
+                      `http://localhost:5002/notes/upload/${encodeURIComponent(batch.batchName)}/${module}/${encodeURIComponent(note.title)}/${student.user.name}/${student._id}/${note.day}`,
+                      fd
+                    ).then(() => alert('Answer uploaded')).catch(console.error);
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm"
+                >
+                  Upload Answer
+                </button>
+              </>
+            ) : mark === -1 ? (
+              <p className="text-sm text-yellow-600 font-medium">Submitted (Pending Evaluation)</p>
+            ) : (
+              <p className="text-sm text-green-700 font-semibold">Mark: {mark}</p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -170,28 +204,43 @@ export default function StudentBatch() {
       </div>
 
       {/* Notes Section */}
-      <div className="mb-10">
-        {/* Latest Note (if any) */}
-        {currentModuleNotes.today.length > 0 && (
-          <div className="mb-10">
-            <h4 className="text-md font-semibold text-green-600 mb-3">Latest Note</h4>
-            {currentModuleNotes.today.map((note, index) =>
-              renderNoteCard(note, student, batchId, activeModule, true, index)
-            )}
-          </div>
-        )}
-
-        {/* Older Notes 2 per row */}
-        {currentModuleNotes.others.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6">
-            {currentModuleNotes.others.map((note, index) =>
-              renderNoteCard(note, student, batchId, activeModule, false, index)
-            )}
-          </div>
-        )}
-
-        {currentModuleNotes.today.length === 0 && currentModuleNotes.others.length === 0 && (
+      <div className="mb-10 flex flex-col gap-8">
+        {currentModuleNotes.today.length === 0 && currentModuleNotes.others.length === 0 ? (
           <p className="text-gray-500 text-sm">No notes uploaded yet.</p>
+        ) : (
+          <>
+            {activeModule === Object.entries(notesMap).reduce((acc, [mod, notes]) => {
+              const maxDay = [...notes.today, ...notes.others].reduce((max, note) => Math.max(max, note.day || 0), -1);
+              const accDay = [...(notesMap[acc]?.today || []), ...(notesMap[acc]?.others || [])].reduce((max, note) => Math.max(max, note.day || 0), -1);
+              return maxDay > accDay ? mod : acc;
+            }, Object.keys(notesMap)[0]) ? (
+              <>
+                {currentModuleNotes.today.length > 0 && (
+                  <div className="flex flex-col gap-6">
+                    <h4 className="text-md font-semibold text-green-600 mb-3">Today's Notes</h4>
+                    {currentModuleNotes.today.map((note, index) =>
+                      renderNoteCard(note, student, batchId, activeModule, true, index)
+                    )}
+                  </div>
+                )}
+                {currentModuleNotes.others.length > 0 && (
+                  <div className="flex flex-col gap-6 mt-6">
+                    <h4 className="text-md font-semibold text-gray-700 mb-3">Previous Notes</h4>
+                    {currentModuleNotes.others.map((note, index) =>
+                      renderNoteCard(note, student, batchId, activeModule, false, index)
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <h4 className="text-md font-semibold text-gray-700 mb-3">Notes</h4>
+                {[...currentModuleNotes.today, ...currentModuleNotes.others].map((note, index) =>
+                  renderNoteCard(note, student, batchId, activeModule, false, index)
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
