@@ -99,7 +99,7 @@ function StudentHome() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-semibold text-gray-800">
-          Welcome back {student.name}
+          Welcome back {student.user?.name}
         </h2>
         <button
           onClick={logout}
@@ -114,7 +114,6 @@ function StudentHome() {
         {/* Left Column */}
         <div className="w-full md:w-3/5">
           <CourseProgressWidget progress={Math.round((progress.assignment + progress.quiz + progress.coding) / 3)} />
-
 
           {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-4 mt-6">
@@ -166,7 +165,7 @@ function StudentHome() {
         {/* Right Column */}
         <div className="w-full md:w-2/5 space-y-6">
           <CalendarWidget date={date} setDate={setDate} />
-          <NotesWidget />
+          <NotesWidget studentId={student._id} />
         </div>
       </div>
     </div>

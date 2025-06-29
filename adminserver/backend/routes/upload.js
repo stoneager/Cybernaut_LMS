@@ -104,14 +104,8 @@ router.post('/notes/upload/:batch/:module/:title/:student/:studentid/:day', uplo
     // Create or update Report
     let report = await Report.findOne({ student: studentid, module, day });
 
-    if (!report) {
-      report = new Report({
-        student: studentid,
-        module,
-        day,
-        marksObtained: [-2, -2, -1],
-      });
-    }
+    report.marksObtained = [-2, -2, -1]; // ✅ Correct
+
 
     await report.save();
 

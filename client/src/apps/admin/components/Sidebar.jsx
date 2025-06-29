@@ -28,6 +28,12 @@ const Sidebar = ({ children }) => {
 
   // Fetch profile once on mount
   useEffect(() => {
+  if (location.pathname === "/admin") {
+    navigate("/admin/", { replace: true });
+  }
+}, [location.pathname, navigate]);
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     axios
       .get("http://localhost:5002/api/dashboard/lecturer", {

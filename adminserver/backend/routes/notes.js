@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Note = require('../models/Note');
+const Student = require('../models/Student');
+const Report = require('../models/Report');
 
 // ✅ GET notes by batch and module
 router.get('/:batchId/:module', async (req, res) => {
@@ -14,14 +16,14 @@ router.get('/:batchId/:module', async (req, res) => {
   }
 });
 
-// ✅ POST new note
+// ✅ POST new note AND create default reports
 router.post('/', async (req, res) => {
   const {
     title,
     meetlink,
     quizlink,
     assignmentlink,
-    assignmentS3Url, // ✅ S3 URL added
+    assignmentS3Url,
     batch,
     module,
     admin,
@@ -34,7 +36,7 @@ router.post('/', async (req, res) => {
       meetlink,
       quizlink,
       assignmentlink,
-      assignmentS3Url, // ✅ Store S3 URL
+      assignmentS3Url,
       batch,
       module,
       admin,
@@ -42,9 +44,23 @@ router.post('/', async (req, res) => {
     });
 
     await note.save();
-    res.json({ message: 'Note added', note });
+
+    // 🔁 Fetch all students of the batch
+    const students = await Student.find({ batch });
+
+    // 📝 Create a report for each student
+    const reports = students.map(student => ({
+      student: student._id,
+      module,
+      day,
+      marksObtained: [-2, -2, -2]
+    }));
+
+    await Report.insertMany(reports);
+
+    res.json({ message: 'Note added and reports initialized', note });
   } catch (err) {
-    res.status(400).json({ error: 'Failed to add note', details: err.message });
+    res.status(400).json({ error: 'Failed to add note or create reports', details: err.message });
   }
 });
 
@@ -55,7 +71,7 @@ router.put('/:id', async (req, res) => {
     meetlink,
     quizlink,
     assignmentlink,
-    assignmentS3Url, // ✅ S3 URL update
+    assignmentS3Url,
     batch,
     module,
     admin,
@@ -70,7 +86,7 @@ router.put('/:id', async (req, res) => {
         meetlink,
         quizlink,
         assignmentlink,
-        assignmentS3Url, // ✅ Update S3 URL
+        assignmentS3Url,
         batch,
         module,
         admin,
