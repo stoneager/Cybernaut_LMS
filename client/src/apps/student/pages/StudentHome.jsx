@@ -10,6 +10,7 @@ function StudentHome() {
   const [date, setDate] = useState(new Date());
   const [latestNote, setLatestNote] = useState(null);
   const [progress, setProgress] = useState({ coding: 0, quiz: 0, assignment: 0 });
+  const [reports, setReports] = useState([]); // ✅ new state
 
   const navigate = useNavigate();
 
@@ -81,9 +82,20 @@ function StudentHome() {
       }
     };
 
+    const fetchReports = async () => {
+      try {
+        if (!student?._id) return;
+        const res = await axios.get(`http://localhost:5003/api/reports/${student._id}`);
+        setReports(res.data);
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+      }
+    };
+
     if (student) {
       fetchLatestNote();
       fetchProgress();
+      fetchReports(); // ✅ fetch reports too
     }
   }, [student]);
 
@@ -99,7 +111,7 @@ function StudentHome() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-semibold text-gray-800">
-          Welcome back {student.user?.name}
+          Welcome back {student.name}
         </h2>
         <button
           onClick={logout}
@@ -157,6 +169,45 @@ function StudentHome() {
                 >
                   Attempt Quiz
                 </a>
+              </div>
+            </div>
+          )}
+
+          {/* Marks Table */}
+          {reports.length > 0 && (
+            <div className="mt-6 bg-white border shadow-sm rounded-lg p-5">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Marks</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-700 border">
+                  <thead className="bg-gray-100 text-gray-600 uppercase">
+                    <tr>
+                      <th className="px-4 py-2">Module</th>
+                      <th className="px-4 py-2">Day</th>
+                      <th className="px-4 py-2">Code</th>
+                      <th className="px-4 py-2">Quiz</th>
+                      <th className="px-4 py-2">Assignment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...reports]
+  .sort((a, b) => b.day - a.day)
+  .map((report, idx) => (
+    <tr key={idx} className="border-t">
+      <td className="px-4 py-2">{report.module}</td>
+      <td className="px-4 py-2">{report.day}</td>
+      {report.marksObtained.map((mark, i) => (
+        <td className="px-4 py-2" key={i}>
+          {mark === -2 ? "Not Submitted" :
+           mark === -1 ? "Not Evaluated" :
+           mark}
+        </td>
+      ))}
+    </tr>
+))}
+
+
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
