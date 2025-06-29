@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../api";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
@@ -19,11 +20,11 @@ export default function AnalyticsPage() {
   const profilePic = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
   useEffect(() => {
-    axios.get("http://localhost:5001/api/stats")
+    API.get("/api/stats")
       .then(res => setStats(res.data))
       .catch(err => console.error("Stats fetch error:", err));
 
-    axios.get("http://localhost:5001/api/courses/names")
+    API.get("/api/courses/names")
       .then(res => {
         setCourses(res.data);
         if (res.data.length > 0) setCourse(res.data[0]);
@@ -33,7 +34,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (!course) return;
-    axios.get(`http://localhost:5001/api/tests/top/${course}`)
+    API.get(`/api/tests/top/${course}`)
       .then(res => {
         const formatted = res.data.map(item => ({
           studentName: item.studentName,

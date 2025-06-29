@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import API from "../api";
 import { toast } from 'react-toastify';
 import { FaUpload, FaUserPlus, FaDownload } from "react-icons/fa";
 import { FaEye, FaPlus } from "react-icons/fa";
@@ -28,12 +29,12 @@ const Batches = () => {
 
   useEffect(() => {
     fetchBatches();
-    axios.get("http://localhost:5001/api/courses").then(res => setCourses(res.data));
-    axios.get("http://localhost:5001/api/users?role=admin").then(res => setStaff(res.data));
+    API.get("/api/courses").then(res => setCourses(res.data));
+    API.get("/api/users?role=admin").then(res => setStaff(res.data));
   }, []);
 
   const fetchBatches = () => {
-    axios.get("http://localhost:5001/api/batches")
+    API.get("/api/batches")
       .then(res => {
         setBatches(res.data);
         const courses = [
@@ -58,7 +59,7 @@ const Batches = () => {
       .join("");
 
     try {
-      const res = await axios.get(`http://localhost:5001/api/batches/count?courseId=${courseId}&month=${month}&year=${year}`);
+      const res = await API.get(`/api/batches/count?courseId=${courseId}&month=${month}&year=${year}`);
       const count = res.data.count;
       const name = `${prefix}-${shortMonth}${shortYear}-B${count + 1}`;
       setGeneratedBatchName(name);
@@ -89,7 +90,7 @@ const Batches = () => {
     try {
       const finalBatchName = await generateBatchName(form.course, form.startDate);
       const payload = { ...form, batchName: finalBatchName };
-      const res = await axios.post("http://localhost:5001/api/batches", payload);
+      const res = await API.post("/api/batches", payload);
       toast.success("✅ Batch created successfully!");
       fetchBatches();
       setForm({ course: "", startDate: "", admins: [] });
@@ -107,7 +108,7 @@ const Batches = () => {
   formData.append("file", file);
   setLoading(true);
   try {
-    const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
+    const res = await API.post("/api/upload/upload", formData);
 const cleanedStudents = res.data.students.map(stu => ({
   ...stu,
   email: typeof stu.email === "object" ? stu.email.text : stu.email,
@@ -152,7 +153,7 @@ const handleSave = async () => {
 
   setSaving(true);
   try {
-    const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
+    const res = await API.post("/api/students/save-selected", selectedList);
     setCredentials(res.data.credentials);
     toast.success("Students Added Successfully");
     setAdded(true); // ✅ Disable button
@@ -166,8 +167,8 @@ const handleSave = async () => {
 
   const handleDownloadCSV = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:5001/api/students/download-credentials",
+      const res = await API.post(
+        "/api/students/download-credentials",
         credentials,
         { responseType: "blob" }
       );

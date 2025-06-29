@@ -15,20 +15,22 @@ export default function StudentChat() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const studentRes = await axios.get("http://localhost:5000/auth/student/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSender(studentRes.data.user.name);
+  try {
+    const token = localStorage.getItem("token");
+    const studentRes = await axios.get("http://localhost:5000/auth/student/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSender(studentRes.data.user.name);
 
-        const batchId = new URLSearchParams(window.location.search).get("batch");
-        const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${batchId}`);
-        setBatchInfo(batchRes.data);
-      } catch (err) {
-        console.error("Failed to fetch data", err);
-      }
-    };
+    const batchId = new URLSearchParams(window.location.search).get("batch");
+    const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${batchId}`);
+    setBatchInfo(batchRes.data);
+    setActiveChat({ type: "forum" }); // ✅ default to forum chat
+  } catch (err) {
+    console.error("Failed to fetch data", err);
+  }
+};
+
 
     fetchData();
   }, []);
@@ -87,7 +89,7 @@ export default function StudentChat() {
   if (!batchInfo) return <p className="text-center mt-6 text-gray-500">Loading chat...</p>;
 
   return (
-    <div className="fixed w-[80%] left-72  top-0 flex h-[100vh] bg-gray-100 overflow-hidden">
+    <div className="flex h-[83vh] bg-gray-100 overflow-hidden">
       {/* Chat Window */}
       <div className="flex-1 flex flex-col overflow-hidden bg-white">
         {/* Header */}

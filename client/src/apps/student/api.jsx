@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5002/api', // your backend URL
+  baseURL: 'http://localhost:5003', // your backend URL
 });
 
 // Add token to headers

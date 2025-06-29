@@ -5,7 +5,7 @@ import './CustomCalendar.css'; // <-- custom CSS override
 
 function CalendarWidget({ date, setDate }) {
   return (
-    <div className="rounded-lg shadow p-6 bg-white max-w-sm mx-auto">
+    <div className="rounded-lg shadow p-8 bg-white max-w-sm mx-auto">
       <Calendar onChange={setDate} value={date} />
     </div>
   );

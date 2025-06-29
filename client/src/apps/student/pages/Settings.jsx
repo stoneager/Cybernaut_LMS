@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api"
 import { toast } from "react-toastify";
 
 const Settings = () => {
@@ -27,7 +27,7 @@ const Settings = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5003/api/settings/me", {
+      const res = await api.get("/api/settings/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setForm({
@@ -47,7 +47,7 @@ const Settings = () => {
 
   const handleSave = async () => {
     const token = localStorage.getItem("token");
-    await axios.put("http://localhost:5003/api/settings/me", form, {
+    await api.put("/api/settings/me", form, {
       headers: { Authorization: `Bearer ${token}` },
     });
     toast.success("Profile updated successfully!");
@@ -67,8 +67,8 @@ const Settings = () => {
   const submitPasswordChange = async () => {
     const token = localStorage.getItem("token");
     try {
-      await axios.put(
-        "http://localhost:5000/auth/change-password",
+      await api.put(
+        "/auth/change-password",
         passwordForm,
         {
           headers: { Authorization: `Bearer ${token}` },

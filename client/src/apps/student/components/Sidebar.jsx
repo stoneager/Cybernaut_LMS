@@ -62,7 +62,7 @@ const Sidebar = ({ children }) => {
       {/* Sidebar */}
       <div className="flex flex-col w-64 bg-white border-r border-gray-200 shadow-sm relative">
         {/* Profile */}
-        <div className="border-b border-gray-200 h-20 flex items-center px-4">
+        <div className="border-b border-gray-200 h-20 flex items-center px-4 py-6">
           <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-xl border border-blue-100 w-full">
             <div className="relative">
               <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white shadow-sm">
@@ -158,9 +158,10 @@ const Sidebar = ({ children }) => {
       {/* Main Content with Topbar */}
       <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
         <Topbar pageTitle="Dashboard" userName={student?.user?.name || "Student"} />
-        <div className="p-6">
+        <div className="pt-4 px-6 pb-6">
           {children}
         </div>
+
       </div>
     </div>
   );

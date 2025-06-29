@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from "../api";
 import {
   FaPhone, FaEnvelope, FaChalkboardTeacher, FaEdit, FaTrash
 } from 'react-icons/fa';
@@ -33,7 +34,7 @@ export default function Admins() {
   }, []);
 
   const fetchAdmins = async () => {
-    const res = await axios.get('http://localhost:5001/api/admins');
+    const res = await api.get('/api/admins');
     setAdmins(res.data);
   };
 
@@ -44,7 +45,7 @@ export default function Admins() {
 
 const handleDeleteConfirmed = async () => {
   try {
-    await axios.delete(`http://localhost:5001/api/admins/${adminToDelete}`);
+    await api.delete(`/api/admins/${adminToDelete}`);
     toast.success("Lecturer deleted successfully");
     setDeleteModalOpen(false);
     setAdminToDelete(null);
@@ -75,10 +76,10 @@ const handleCancelDelete = () => {
 
   try {
     if (isEditing) {
-      await axios.put(`http://localhost:5001/api/admins/${editingId}`, payload);
+      await api.put(`/api/admins/${editingId}`, payload);
       alert("Lecturer updated.");
     } else {
-      const res = await axios.post('http://localhost:5001/api/admins', payload);
+      const res = await api.post('/api/admins', payload);
       setGeneratedPassword(res.data.generatedPassword);
       alert(`Lecturer added. Temporary password: ${res.data.generatedPassword}`);
     }

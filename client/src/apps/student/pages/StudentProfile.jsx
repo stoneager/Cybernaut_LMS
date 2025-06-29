@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import UserContext from '../context/UserContext';
 import axios from 'axios';
 
+
 function StudentProfile() {
   const { userData, setUserData } = useContext(UserContext);
   const [newPassword, setNewPassword] = useState('');

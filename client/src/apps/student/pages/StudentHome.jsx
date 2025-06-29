@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import API from '../api';
 import { useNavigate } from 'react-router-dom';
 import CalendarWidget from "../widgets/CalendarWidget";
 import NotesWidget from '../widgets/NotesWidget';
 import CourseProgressWidget from '../widgets/CourseProgressWidget';
+import Quotes from '../widgets/Quotes';
 
 function StudentHome() {
   const [student, setStudent] = useState(null);
   const [date, setDate] = useState(new Date());
   const [latestNote, setLatestNote] = useState(null);
   const [progress, setProgress] = useState({ coding: 0, quiz: 0, assignment: 0 });
-  const [reports, setReports] = useState([]); // ✅ new state
+  const [reports, setReports] = useState([]);
+  const [quote, setQuote] = useState(null); // ✅ new state for quote
 
   const navigate = useNavigate();
 
@@ -34,12 +37,18 @@ function StudentHome() {
   }, [navigate]);
 
   useEffect(() => {
+    const allQuotes = Quotes();
+    const randomIndex = Math.floor(Math.random() * allQuotes.length);
+    setQuote(allQuotes[randomIndex]); // ✅ pick one random quote
+  }, []);
+
+  useEffect(() => {
     const fetchLatestNote = async () => {
       try {
         if (!student?.batch) return;
         const token = localStorage.getItem('token');
 
-        const batchRes = await axios.get(`http://localhost:5003/student/batch/by-id/${student.batch}`, {
+        const batchRes = await API.get(`/student/batch/by-id/${student.batch}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -50,7 +59,7 @@ function StudentHome() {
         for (const adminObj of batch.admins || []) {
           const moduleName = adminObj.module;
 
-          const notesRes = await axios.get(`http://localhost:5003/notes/${batch._id}/${moduleName}`, {
+          const notesRes = await API.get(`/notes/${batch._id}/${moduleName}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
 
@@ -75,7 +84,7 @@ function StudentHome() {
     const fetchProgress = async () => {
       try {
         if (!student?._id) return;
-        const res = await axios.get(`http://localhost:5003/api/progress/${student._id}`);
+        const res = await API.get(`/api/progress/${student._id}`);
         setProgress(res.data);
       } catch (err) {
         console.error("Failed to fetch progress:", err);
@@ -85,7 +94,7 @@ function StudentHome() {
     const fetchReports = async () => {
       try {
         if (!student?._id) return;
-        const res = await axios.get(`http://localhost:5003/api/reports/${student._id}`);
+        const res = await API.get(`/api/reports/${student._id}`);
         setReports(res.data);
       } catch (err) {
         console.error("Failed to fetch reports:", err);
@@ -95,30 +104,26 @@ function StudentHome() {
     if (student) {
       fetchLatestNote();
       fetchProgress();
-      fetchReports(); // ✅ fetch reports too
+      fetchReports();
     }
   }, [student]);
-
-  const logout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
 
   if (!student) return <p className="text-center mt-6 text-gray-500">Loading...</p>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4">
         <h2 className="text-3xl font-semibold text-gray-800">
-          Welcome back {student.name}
+          Welcome back {student.user?.name}
         </h2>
-        <button
-          onClick={logout}
-          className="bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition"
-        >
-          Logout
-        </button>
+        {quote && (
+  <div className="mt-2 text-gray-600 italic text-sm flex flex-col">
+    <span>“{quote.text}”</span>
+    <span className="text-xs text-gray-500 mt-1">— {quote.author}</span>
+  </div>
+)}
+
       </div>
 
       {/* Main content */}
@@ -175,42 +180,50 @@ function StudentHome() {
 
           {/* Marks Table */}
           {reports.length > 0 && (
-            <div className="mt-6 bg-white border shadow-sm rounded-lg p-5">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Marks</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-700 border">
-                  <thead className="bg-gray-100 text-gray-600 uppercase">
-                    <tr>
-                      <th className="px-4 py-2">Module</th>
-                      <th className="px-4 py-2">Day</th>
-                      <th className="px-4 py-2">Code</th>
-                      <th className="px-4 py-2">Quiz</th>
-                      <th className="px-4 py-2">Assignment</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...reports]
-  .sort((a, b) => b.day - a.day)
-  .map((report, idx) => (
-    <tr key={idx} className="border-t">
-      <td className="px-4 py-2">{report.module}</td>
-      <td className="px-4 py-2">{report.day}</td>
-      {report.marksObtained.map((mark, i) => (
-        <td className="px-4 py-2" key={i}>
-          {mark === -2 ? "Not Submitted" :
-           mark === -1 ? "Not Evaluated" :
-           mark}
-        </td>
-      ))}
-    </tr>
-))}
+  <div className="mt-6 bg-white border shadow-sm rounded-lg p-5">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Marks</h3>
 
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm text-left text-gray-700 border">
+        <thead className="bg-gray-100 text-gray-600 uppercase">
+          <tr>
+            <th className="px-4 py-2">Module</th>
+            <th className="px-4 py-2">Day</th>
+            <th className="px-4 py-2">Code</th>
+            <th className="px-4 py-2">Quiz</th>
+            <th className="px-4 py-2">Assignment</th>
+          </tr>
+        </thead>
+      </table>
 
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+      {/* Scrollable Body */}
+      <div className="max-h-72 overflow-y-auto">
+        <table className="w-full text-sm text-left text-gray-700 border-t">
+          <tbody>
+            {[...reports]
+              .sort((a, b) => b.day - a.day)
+              .map((report, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="px-4 py-2">{report.module}</td>
+                  <td className="px-4 py-2">{report.day}</td>
+                  {report.marksObtained.map((mark, i) => (
+                    <td className="px-4 py-2" key={i}>
+                      {mark === -2
+                        ? "Not Submitted"
+                        : mark === -1
+                        ? "Not Evaluated"
+                        : mark}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
+
         </div>
 
         {/* Right Column */}

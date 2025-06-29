@@ -43,7 +43,7 @@ function NotesWidget({ studentId }) {
     <div className="bg-white p-6 rounded-md shadow max-w-sm mx-auto mt-6">
       <h3 className="text-xl font-semibold text-gray-700 mb-4">Your Reminders</h3>
 
-      <ul className="space-y-3">
+      <ul className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {missingNotes.length === 0 ? (
           <li className="text-sm text-gray-400">No missing work 🎉</li>
         ) : (
