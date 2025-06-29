@@ -8,7 +8,9 @@ import CourseProgressWidget from '../widgets/CourseProgressWidget';
 function StudentHome() {
   const [student, setStudent] = useState(null);
   const [date, setDate] = useState(new Date());
+
   const [latestNote, setLatestNote] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,12 +84,15 @@ useEffect(() => {
   if (!student) return <p className="text-center mt-6 text-gray-500">Loading...</p>;
 
   return (
+
     <div className="p-6 bg-gray-50 min-h-screen">
+
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-3xl font-semibold text-gray-800">
           Welcome back {student.name}
         </h2>
+
         <button
           onClick={logout}
           className="bg-purple-600 text-white px-4 py-2 rounded-md shadow hover:bg-purple-700 transition"
@@ -150,6 +155,7 @@ className="text-xs px-3 py-1 bg-black text-white rounded hover:bg-gray-700 trans
         </div>
 
         {/* Right Column */}
+
         <div className="w-full md:w-2/5 space-y-6">
           <CalendarWidget date={date} setDate={setDate} />
           <NotesWidget />

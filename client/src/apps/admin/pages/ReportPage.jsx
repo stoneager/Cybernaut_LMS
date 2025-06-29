@@ -4,6 +4,7 @@ import AdminLayout from "../components/AdminLayout";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
+
 const ReportPage = () => {
   const { batchId } = useParams();
   const [search, setSearch] = useState("");
@@ -44,6 +45,7 @@ const ReportPage = () => {
 
   return (
       <div>
+      
       {/* Search */}
       <div className="flex items-center mt-6 mb-4">
         <div className="relative w-full max-w-xl mx-auto">

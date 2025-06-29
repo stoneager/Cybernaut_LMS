@@ -34,7 +34,9 @@ function NotesWidget() {
   return (
     <div className="bg-white p-6 rounded-md shadow max-w-sm mx-auto mt-6">
       <h3 className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+
          Your Reminders
+
       </h3>
 
       {/* Input area */}

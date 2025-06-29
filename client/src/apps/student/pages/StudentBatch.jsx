@@ -82,6 +82,7 @@ export default function StudentBatch() {
     }
   };
 
+
   return (
     <div
       key={note._id}
@@ -115,9 +116,11 @@ export default function StudentBatch() {
         <button
           onClick={viewAssignment}
           className="px-3 py-2 bg-gray-800 text-white text-xs rounded-md hover:opacity-90 whitespace-nowrap"
+
         >
           View Assignment
         </button>
+
 
         {/* PDF Input */}
         <input
@@ -148,6 +151,8 @@ export default function StudentBatch() {
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+
+       
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
           </svg>
@@ -188,7 +193,9 @@ export default function StudentBatch() {
         ))}
       </div>
 
+
       <div className="mb-10">
+
         {currentModuleNotes.today.length === 0 && currentModuleNotes.others.length === 0 ? (
           <p className="text-gray-500 text-sm">No notes uploaded yet.</p>
         ) : (
@@ -209,12 +216,14 @@ export default function StudentBatch() {
             {currentModuleNotes.others.length > 0 && (
               <div>
                 <h4 className="text-md font-semibold text-gray-700 mb-3">Previous Notes</h4>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
                   {currentModuleNotes.others.map(note => (
                     <div key={note._id}>
                       {renderNoteCard(note, student, batchId, activeModule)}
                     </div>
                   ))}
+
                 </div>
               </div>
             )}

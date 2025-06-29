@@ -6,6 +6,7 @@ import StudentBatch from './pages/StudentBatch';
 import StudentSidebar from './pages/StudentSidebar';
 import { ToastContainer } from 'react-toastify';
 import Settings from './pages/Settings';
+
 function AppRoutes() {
   return (
     <>
@@ -54,6 +55,7 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/settings"
           element={
@@ -64,6 +66,7 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+
       </Routes>
     </>
   );

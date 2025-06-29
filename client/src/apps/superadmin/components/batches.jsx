@@ -98,44 +98,67 @@ const Batches = () => {
   };
 
   const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-    setLoading(true);
-    try {
-      const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
-      setStudents(res.data.students);
-    } catch (err) {
-      alert("Error uploading file");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+  setLoading(true);
+  try {
+    const res = await axios.post("http://localhost:5001/api/upload/upload", formData);
+const cleanedStudents = res.data.students.map(stu => ({
+  ...stu,
+  email: typeof stu.email === "object" ? stu.email.text : stu.email,
+  name: typeof stu.name === "object" ? stu.name.text : stu.name,
+  phone: typeof stu.phone === "object" ? stu.phone.text : stu.phone,
+}));
+setStudents(cleanedStudents);
+
+// Auto-select
+const autoSelected = {};
+cleanedStudents.forEach(stu => {
+  autoSelected[stu.email] = true;
+});
+setSelected(autoSelected);
+
+
+  } catch (err) {
+    toast.error("Error saving students");
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const toggleSelect = (email) => {
-    setSelected((prev) => ({ ...prev, [email]: !prev[email] }));
-  };
+  const cleanEmail = typeof email === "object" ? email.text : email;
+  setSelected((prev) => ({ ...prev, [cleanEmail]: !prev[cleanEmail] }));
+};
+ 
 
-  const handleSave = async () => {
-    const selectedList = students
-      .filter((stu) => selected[stu.email])
-      .map((stu) => ({
-        ...stu,
-        course: showModal2.course,
-        batch: showModal2.batchId,
-      }));
+const [added, setAdded] = useState(false);
 
-    setSaving(true);
-    try {
-      const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
-      setCredentials(res.data.credentials);
-      alert("Students added successfully");
-    } catch (err) {
-      alert("Error saving students");
-    } finally {
-      setSaving(false);
-    }
-  };
+const handleSave = async () => {
+  const selectedList = students
+    .filter((stu) => selected[stu.email])
+    .map((stu) => ({
+      ...stu,
+      course: showModal2.course,
+      batch: showModal2.batchId,
+    }));
+
+  setSaving(true);
+  try {
+    const res = await axios.post("http://localhost:5001/api/students/save-selected", selectedList);
+    setCredentials(res.data.credentials);
+    toast.success("Students Added Successfully");
+    setAdded(true); // ✅ Disable button
+  } catch (err) {
+    alert("Error saving students");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleDownloadCSV = async () => {
     try {
@@ -356,24 +379,32 @@ const Batches = () => {
                         checked={!!selected[stu.email]}
                       />
                     </td>
-                    <td className="p-4">{stu.name}</td>
-                    <td className="p-4">{stu.email}</td>
-                    <td className="p-4">{stu.phone}</td>
+                    <td className="p-4">
+  {typeof stu.name === "object" ? stu.name.text : stu.name}
+</td>
+<td className="p-4">
+  {typeof stu.email === "object" ? stu.email.text : stu.email}
+</td>
+<td className="p-4">
+  {typeof stu.phone === "object" ? stu.phone.text : stu.phone}
+</td>
+
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
-              saving ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-            }`}
-          >
-            {saving ? "Saving..." : "Add Selected Students"}
-          </button>
+         <button
+  onClick={handleSave}
+  disabled={saving || added}
+  className={`w-full py-3 text-lg font-semibold text-white rounded-xl transition ${
+    saving || added ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+  }`}
+>
+  {saving ? "Saving..." : added ? "Students Added" : "Add Selected Students"}
+</button>
+
 
           {credentials.length > 0 && (
             <button

@@ -11,7 +11,6 @@ const verifyAccessToken = async (req, res, next) => {
 
   try {
   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-  console.log("Decoded ID Auth:", decoded.id);
 
   const user = await User.findById(decoded.id);
 
@@ -20,9 +19,7 @@ const verifyAccessToken = async (req, res, next) => {
     return res.status(401).json({ error: "User not found" });
   }
 
-  console.log("User:", user);
-  console.log("Sent token:", token);
-  console.log("Stored token:", user?.activeToken);
+  
 
   if (user.activeToken !== token) {
     console.log("⚠️ Token mismatch!");
