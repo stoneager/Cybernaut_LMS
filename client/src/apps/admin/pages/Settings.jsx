@@ -101,8 +101,8 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="flex-1 p-8 overflow-y-auto">
+    <div className="p-4 flex h-[100vh] bg-gray-50">
+      <div className="flex-1 p-0 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">Profile & Settings</h1>
         <p className="text-gray-500 mb-6">
           Manage your account settings and preferences
@@ -110,7 +110,7 @@ const Settings = () => {
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {/* Header */}
-          <div className="flex items-center p-6 border-b">
+          <div className="flex items-center h-25 p-6 border-b">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-blue-500 font-bold">
               {form.name?.charAt(0)}
             </div>

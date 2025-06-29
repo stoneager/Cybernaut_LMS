@@ -86,7 +86,7 @@ export default function AnalyticsPage() {
   const others = leaderboard.slice(3);
 
   return (
-    <div className="ml-2 p-6 bg-gradient-to-br from-blue-50 to-white min-h-screen text-black">
+    <div className="ml-2 p-2 bg-gradient-to-br from-blue-50 to-white min-h-screen text-black">
 
       <h2 className="text-3xl font-bold text-blue-900 mb-6 text-center">Leaderboard</h2>
 

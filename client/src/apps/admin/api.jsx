@@ -22,7 +22,7 @@ API.interceptors.response.use(
       localStorage.removeItem('token');
 
       // Redirect to central login page instead of current app
-      window.location.href = 'http://localhost:3000/login';
+      window.location.href = 'http://localhost:5173/login';
     }
     return Promise.reject(err);
   }

@@ -51,7 +51,7 @@ const filterStudents = () => {
 
 
   return (
-    <div className="p-4 bg-gray-50 min-h-[90%]">
+    <div className="p-4 bg-gradient-to-br from-white via-blue-50 to-white min-h-[90%]">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Student Management</h1>
       </div>

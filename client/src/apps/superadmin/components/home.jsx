@@ -44,7 +44,7 @@ useEffect(() => {
   return (
   <>
   
-  <div className="p-6 bg-gradient-to-br from-white via-blue-50 to-white min-h-screen text-black">
+  <div className="p-4 bg-gradient-to-br from-white via-blue-50 to-white h-[89vh] text-black">
     
 
     <h2 className="text-3xl font-bold text-blue-900 mb-6">Welcome, Super Admin</h2>

@@ -77,7 +77,7 @@ const Payment = () => {
   };
 
   return (
-    <div className="p-2 md:p-4">
+    <div className="p-2 bg-gradient-to-br from-white via-blue-50 to-white md:p-4">
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white h-30 border border-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition">

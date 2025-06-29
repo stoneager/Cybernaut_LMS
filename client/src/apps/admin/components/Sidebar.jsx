@@ -112,7 +112,7 @@ return (
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">{profile.name || "Admin User"}</p>
-            <p className="text-xs text-gray-500 font-medium">Administrator</p>
+            <p className="text-xs text-gray-500 font-medium">{profile.email}</p>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@ return (
           {({ isActive }) => (
             <>
               <FaComments className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
-              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Support Chat</span>
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Super Admin Chat</span>
             </>
           )}
         </NavLink>
@@ -285,10 +285,11 @@ return (
     </div>
 
     {/* Main content area with Topbar */}
-    <div className="flex-1 flex flex-col">
-      <Topbar pageTitle={getPageTitle()} />
-      <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6">{children}</div>
-    </div>
+    <div className="flex-1 flex flex-col h-full">
+  <Topbar pageTitle={getPageTitle()} adminName={profile.name} />
+  <div className="flex-1 overflow-y-auto bg-[#f8fafc]">{children}</div>
+</div>
+
   </div>
 );
 }

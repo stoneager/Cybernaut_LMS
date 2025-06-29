@@ -78,7 +78,7 @@ const handleLogout = async () => {
         setExpanded(false);
         onHover(false);
       }}
-      className={`h-[98vh] ${expanded ? "w-64" : "w-18"} bg-white border-r border-gray-200 shadow-sm flex flex-col justify-between fixed top-0 left-0 z-50 transition-all duration-300`}
+      className={`h-[100vh] ${expanded ? "w-64" : "w-18"} bg-white border-r border-gray-200 shadow-sm flex flex-col justify-between fixed top-0 left-0 z-50 transition-all duration-300`}
     >
       <div>
         <div className="flex items-center gap-2 p-2 border-b">

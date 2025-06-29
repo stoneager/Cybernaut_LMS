@@ -91,7 +91,7 @@ const Courses = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 text-blue-900">
+    <div className="p-6 bg-gradient-to-br from-white via-blue-50 to-white space-y-8 text-blue-900">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Course Management</h1>
         <button

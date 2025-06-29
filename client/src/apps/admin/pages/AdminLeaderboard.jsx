@@ -54,8 +54,8 @@ export default function AdminLeaderboard() {
   const podium = [leaderboard[1], leaderboard[0], leaderboard[2]]; // 1st is taller center
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">Top Performers</h2>
+    <div className="bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-4 text-blue-900">Top Performers</h2>
 
       <div className="flex gap-4 mb-8">
         <select
@@ -117,7 +117,7 @@ export default function AdminLeaderboard() {
       {leaderboard.length === 0 ? (
         <p className="text-gray-500 text-sm">No data available</p>
       ) : (
-        <div className="bg-white p-4 rounded-lg shadow border max-w-xl mx-auto">
+        <div className="bg-white p-4 rounded-lg shadow border w-full mx-auto">
           <ul className="divide-y divide-gray-200">
             {leaderboard.map((entry) => (
               <li key={entry.rank} className="py-2 flex justify-between">

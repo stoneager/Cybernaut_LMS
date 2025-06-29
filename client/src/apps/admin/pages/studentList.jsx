@@ -65,10 +65,12 @@ export default function StudentList() {
   }, [leaderboardModule, leaderboardBatchId]);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
+    <div className="p-4 bg-gray-50 min-h-screen">
+      
 
       <AdminLeaderboard/>
+      <div>
+      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
 
       {/* Search and filter */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -121,6 +123,7 @@ export default function StudentList() {
           </table>
         </div>
       )}
+      </div>
     </div>
   );
 }

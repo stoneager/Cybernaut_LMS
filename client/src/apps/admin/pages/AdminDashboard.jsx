@@ -81,7 +81,7 @@ const { stats, batches } = data;
 
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-gray-50 h-[85vh] flex-1">
       <h2 className="text-2xl font-bold mb-6 text-blue-900">Welcome back, Dr. {stats.name}</h2>
 
       {/* Quick Stats */}

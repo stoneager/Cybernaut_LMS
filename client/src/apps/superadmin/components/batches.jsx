@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from 'react-toastify';
 import { FaUpload, FaUserPlus, FaDownload } from "react-icons/fa";
+import { FaEye, FaPlus } from "react-icons/fa";
+
 
 const Batches = () => {
   const [batches, setBatches] = useState([]);
@@ -21,6 +23,8 @@ const Batches = () => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [generatedBatchName, setGeneratedBatchName] = useState("");
+
+  const [viewBatch, setViewBatch] = useState(null);
 
   useEffect(() => {
     fetchBatches();
@@ -185,7 +189,7 @@ const handleSave = async () => {
   );
 
   return (
-    <div className="p-4 text-blue-900 space-y-6">
+    <div className="p-4 bg-gradient-to-br from-white via-blue-50 to-white text-blue-900 space-y-6">
       <h1 className="text-2xl font-bold mb-2">Batch Management</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,21 +229,77 @@ const handleSave = async () => {
         </button>
       </div>
 
-      <div className="mt-6 border rounded-lg overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-gray-100 text-sm text-gray-700">
-            <tr>
-              <th className="p-3">Batch Name</th>
-              <th className="p-3">Course</th>
-              <th className="p-3">Instructor(s)</th>
-              <th className="p-3">Start Date</th>
-              <th className="p-3">Students</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-             
-        </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+  {filteredBatches.map(batch => {
+    const isActive = new Date(batch.startDate) <= new Date();
+    return (
+      <div key={batch._id} className="border rounded-xl shadow-md p-5 bg-white relative space-y-2">
+        {/* Active Badge */}
+        {isActive && (
+          <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full shadow">
+            Active
+          </div>
+        )}
+
+        <h2 className="text-xl font-bold text-blue-800">{batch.batchName}</h2>
+        <p className="text-sm text-gray-600 font-medium">
+          <span className="text-gray-500 font-semibold">Course:</span> {batch.course?.courseName}
+        </p>
+        <p className="text-sm text-gray-600 font-medium">
+          <span className="text-gray-500 font-semibold">Start Date:</span> {new Date(batch.startDate).toLocaleDateString()}
+        </p>
+        <p className="text-sm text-gray-600 font-medium">
+          <span className="text-gray-500 font-semibold">Students:</span> {batch.studentCount}
+        </p>
+        
+
+        {/* Buttons */}
+        <div className="pt-2 flex gap-3">
+          <button
+            onClick={() => setViewBatch(batch)}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-800 text-white text-sm rounded hover:bg-gray-900"
+          >
+            <FaEye /> View Details
+          </button>
+          <button
+            onClick={() => {
+              setShowModal2({ show: true, course: batch.course, batchId: batch._id });
+              setStudents([]); setSelected({}); setCredentials([]); setAdded(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          >
+            <FaPlus /> Add Students
+          </button>
+        </div>
       </div>
+    );
+  })}
+</div>
+
+
+      {viewBatch && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-lg max-w-xl w-full relative shadow-lg">
+      <button
+        className="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold"
+        onClick={() => setViewBatch(null)}
+      >
+        &times;
+      </button>
+
+      <h2 className="text-xl font-bold mb-4">{viewBatch.batchName}</h2>
+      <p><strong>Course:</strong> {viewBatch.course?.courseName}</p>
+      <p><strong>Start Date:</strong> {new Date(viewBatch.startDate).toLocaleDateString()}</p>
+      <p><strong>Student Count:</strong> {viewBatch.studentCount}</p>
+      <div className="mt-3">
+        <strong>Admins:</strong>
+        {viewBatch.admins.map((a, i) => (
+          <div key={i}>{a.module} - {a.admin?.name}</div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Batch Creation Modal */}
       {showModal && (

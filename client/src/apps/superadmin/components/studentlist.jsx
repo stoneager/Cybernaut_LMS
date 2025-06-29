@@ -32,7 +32,7 @@ const StudentList = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-white via-blue-50 to-white min-h-screen text-gray-900">
+    <div className="p-6 bg-gradient-to-br from-white via-blue-100 to-white min-h-screen text-gray-900">
 
       <h1 className="text-3xl font-bold text-blue-900 mb-8">🎓 All Students</h1>
 

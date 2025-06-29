@@ -113,7 +113,7 @@ const handleCancelDelete = () => {
   );
 
   return (
-    <div className="p-2">
+    <div className="p-2 bg-gradient-to-br from-white via-blue-50 to-white">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Admin Management</h2>
         <button

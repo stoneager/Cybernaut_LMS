@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { FaBell, FaUserCircle } from 'react-icons/fa';
 import cybernaut_logo from '../assets/logo.JPG';
 
-export default function Topbar({ pageTitle = "Dashboard" }) {
+export default function Topbar({ pageTitle = "Dashboard", adminName = "Admin" }) {
   
 
   return (
-    <div className="sticky top-0 z-30 w-full bg-white shadow-sm border-b border-gray-200 backdrop-blur-sm bg-white/95">
+    <div className="w-full bg-white shadow-sm border-b border-gray-200 z-30">
+
       <div className="px-6 h-20 flex justify-between items-center">
         {/* Left: Page Title */}
         <div className="flex items-center gap-4">
@@ -26,7 +27,7 @@ export default function Topbar({ pageTitle = "Dashboard" }) {
           {/* Welcome Message */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
             <span className="text-sm font-medium text-gray-700">Welcome back,</span>
-            <span className="text-sm font-semibold text-blue-700">Admin</span>
+            <span className="text-sm font-semibold text-blue-700">{adminName}</span>
           </div>
         </div>
       </div>
