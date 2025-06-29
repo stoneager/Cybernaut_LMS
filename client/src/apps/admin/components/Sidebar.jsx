@@ -37,6 +37,7 @@ const Sidebar = ({ children }) => {
       .then((res) => {
         const { name, email } = res.data.stats;
         setProfile({ name, email });
+        navigate("/admin/")
       })
       .catch((err) => {
         console.error("Sidebar profile fetch error:", err);

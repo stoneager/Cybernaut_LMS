@@ -64,12 +64,10 @@ router.get('/top/:course', async (req, res) => {
       for (const r of reports) {
         const [quiz, code, assign] = r.marksObtained;
 
-        if (quiz !== -1) { quizSum += quiz; quizCount++; }
-        if (code !== -1) { codeSum += code; codeCount++; }
-        if (assign !== -1) { assignSum += assign; assignCount++; }
+        if (quiz >= 0) { quizSum += quiz; quizCount++; }
+        if (code >= 0) { codeSum += code; codeCount++; }
+        if (assign >= 0) { assignSum += assign; assignCount++; }
       }
-
-      if (quizCount + codeCount + assignCount === 0) continue;
 
       const quizAvg = quizCount ? quizSum / quizCount : 0;
       const codeAvg = codeCount ? codeSum / codeCount : 0;
