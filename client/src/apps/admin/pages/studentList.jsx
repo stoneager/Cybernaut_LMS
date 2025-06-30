@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import AdminLeaderboard from "./AdminLeaderboard";
+
 export default function StudentList() {
   const [students, setStudents] = useState([]);
   const [batchOptions, setBatchOptions] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [courseOptions, setCourseOptions] = useState([]);
+  const [yearOptions, setYearOptions] = useState([]);
 
   const [availableModules, setAvailableModules] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -14,10 +19,25 @@ export default function StudentList() {
 
   const token = localStorage.getItem("token");
 
-  // Fetch students list and batchOptions
+  // Helper function to get full course name from batch name
+  const getCourseName = (batchName) => {
+    if (!batchName) return "N/A";
+    
+    const courseMap = {
+      "FS": "Full Stack Development",
+      "DS": "Data Science", 
+      "DA": "Data Analytics",
+      "TT": "Tech Trio"
+    };
+    
+    const parts = batchName.split("-");
+    const courseCode = parts[0];
+    return courseMap[courseCode] || courseCode;
+  };
+
   useEffect(() => {
     fetchStudents();
-  }, [search, selectedBatch]);
+  }, [search, selectedBatch, selectedCourse, selectedYear]);
 
   const fetchStudents = async () => {
     try {
@@ -25,31 +45,47 @@ export default function StudentList() {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           name: search,
-          batchId: selectedBatch
+          batchId: selectedBatch,
+          course: selectedCourse,
+          year: selectedYear,
         },
         withCredentials: true
       });
 
-      setStudents(res.data.students || []);
-      setBatchOptions(res.data.batchOptions || []);
+      const studentsData = res.data.students || [];
+      const batches = res.data.batchOptions || [];
 
-      // Modules the admin teaches
+      setStudents(studentsData);
+      setBatchOptions(batches);
+
+      // Derive course and year from batchName
+      const courseSet = new Set();
+      const yearSet = new Set();
+
+      batches.forEach(batch => {
+        const parts = batch.batchName.split("-");
+        if (parts.length >= 2) {
+          courseSet.add(parts[0]);
+          yearSet.add(parts[1].slice(3)); // Extract "25" from "JUL25"
+        }
+      });
+
+      setCourseOptions(["All Courses", ...Array.from(courseSet)]);
+      setYearOptions(["All Years", ...Array.from(yearSet)]);
+
       if (res.data.modules) {
         setAvailableModules(res.data.modules);
         setLeaderboardModule(res.data.modules[0] || "");
       }
 
-      // Default to first batch for leaderboard filter
-      if (res.data.batchOptions.length > 0) {
-        setLeaderboardBatchId(res.data.batchOptions[0]._id);
+      if (batches.length > 0) {
+        setLeaderboardBatchId(batches[0]._id);
       }
-
     } catch (err) {
       console.error("Failed to fetch students", err);
     }
   };
 
-  // Fetch leaderboard
   useEffect(() => {
     if (leaderboardModule && leaderboardBatchId) {
       axios.get("http://localhost:5002/statistics/leaderboard", {
@@ -66,63 +102,91 @@ export default function StudentList() {
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      
-
-      <AdminLeaderboard/>
+      <AdminLeaderboard />
       <div>
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
+        <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
 
-      {/* Search and filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search by student name..."
-          className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            className="border px-4 py-2 rounded w-full shadow-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <select
-          className="border px-4 py-2 rounded w-full md:w-1/3 shadow-sm"
-          value={selectedBatch}
-          onChange={(e) => setSelectedBatch(e.target.value)}
-        >
-          <option value="">All Batches</option>
-          {batchOptions.map((batch) => (
-            <option key={batch._id} value={batch._id}>
-              {batch.batchName}
-            </option>
-          ))}
-        </select>
-      </div>
+          <select
+            className="border px-4 py-2 rounded w-full shadow-sm"
+            value={selectedCourse}
+            onChange={(e) =>
+              setSelectedCourse(e.target.value === "All Courses" ? "" : e.target.value)
+            }
+          >
+            {courseOptions.map((course) => (
+              <option key={course} value={course}>
+                {course}
+              </option>
+            ))}
+          </select>
 
-      {/* Student Table */}
-      {students.length === 0 ? (
-        <p className="text-gray-600 text-center mt-8">No students found.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg shadow">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="bg-blue-100 text-blue-900 text-left text-sm">
-                <th className="py-3 px-4">Name</th>
-                <th className="py-3 px-4">Email</th>
-                <th className="py-3 px-4">Phone</th>
-                <th className="py-3 px-4">Batch</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student) => (
-                <tr key={student._id} className="border-t hover:bg-gray-50 text-sm">
-                  <td className="py-2 px-4">{student.name}</td>
-                  <td className="py-2 px-4">{student.email}</td>
-                  <td className="py-2 px-4">{student.phone}</td>
-                  <td className="py-2 px-4">{student.batchName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <select
+            className="border px-4 py-2 rounded w-full shadow-sm"
+            value={selectedBatch}
+            onChange={(e) => setSelectedBatch(e.target.value)}
+          >
+            <option value="">All Batches</option>
+            {batchOptions.map((batch) => (
+              <option key={batch._id} value={batch._id}>
+                {batch.batchName}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="border px-4 py-2 rounded w-full shadow-sm"
+            value={selectedYear}
+            onChange={(e) =>
+              setSelectedYear(e.target.value === "All Years" ? "" : e.target.value)
+            }
+          >
+            {yearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+
+        {/* Student Table */}
+        {students.length === 0 ? (
+          <p className="text-gray-600 text-center mt-8">No students found.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg shadow">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="bg-blue-100 text-blue-900 text-left text-sm">
+                  <th className="py-3 px-4">Name</th>
+                  <th className="py-3 px-4">Email</th>
+                  <th className="py-3 px-4">Phone</th>
+                  <th className="py-3 px-4">Course</th>
+                  <th className="py-3 px-4">Batch</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((student) => (
+                  <tr key={student._id} className="border-t hover:bg-gray-50 text-sm">
+                    <td className="py-2 px-4">{student.name}</td>
+                    <td className="py-2 px-4">{student.email}</td>
+                    <td className="py-2 px-4">{student.phone}</td>
+                    <td className="py-2 px-4">{getCourseName(student.batchName)}</td>
+                    <td className="py-2 px-4">{student.batchName}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

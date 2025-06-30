@@ -10,6 +10,7 @@ const ReportPage = () => {
   const [search, setSearch] = useState("");
   const [selectedDay, setSelectedDay] = useState("All");
   const [selectedModule, setSelectedModule] = useState("All");
+  const [selectedMarksFilter, setSelectedMarksFilter] = useState("All");
   const [reports, setReports] = useState([]);
   const token = localStorage.getItem("token");
 
@@ -34,13 +35,33 @@ const ReportPage = () => {
   const days = ["All", ...Array.from(new Set(reports.map((r) => `Day ${r.day}`)))];
   const moduleOptions = ["All", ...Array.from(new Set(reports.map((r) => r.module)))];
 
+  // Helper function to determine marks status
+  const getMarksStatus = (marksObtained) => {
+    if (!marksObtained || marksObtained.length === 0) return "Not uploaded";
+    
+    // Check if any marks are -2 (Not uploaded)
+    if (marksObtained.some(mark => mark === -2)) return "Not uploaded";
+    
+    // Check if any marks are -1 (Not evaluated)
+    if (marksObtained.some(mark => mark === -1)) return "Not Evaluated";
+    
+    // If all marks are >= 0, it's evaluated
+    if (marksObtained.every(mark => mark >= 0)) return "Evaluated";
+    
+    return "Not uploaded";
+  };
+
   const filtered = reports.filter((s) => {
     const studentName = s.student?.user?.name || "Unknown";
     const matchesName = studentName.toLowerCase().includes(search.toLowerCase());
     const matchesDay = selectedDay === "All" || `Day ${s.day}` === selectedDay;
     const matchesModule = selectedModule === "All" || s.module === selectedModule;
+    
+    // Marks filter logic
+    const marksStatus = getMarksStatus(s.marksObtained);
+    const matchesMarks = selectedMarksFilter === "All" || marksStatus === selectedMarksFilter;
 
-    return matchesName && matchesDay && matchesModule;
+    return matchesName && matchesDay && matchesModule && matchesMarks;
   });
 
   return (
@@ -72,6 +93,21 @@ const ReportPage = () => {
       {days.map((day) => (
         <option key={day} value={day}>{day}</option>
       ))}
+    </select>
+  </div>
+
+  {/* Marks Filter */}
+  <div className="flex flex-col">
+    <label className="mb-1 text-sm font-semibold text-gray-700">Filter by Marks:</label>
+    <select
+      value={selectedMarksFilter}
+      onChange={(e) => setSelectedMarksFilter(e.target.value)}
+      className="border rounded-lg px-4 py-2 text-gray-700 shadow-sm"
+    >
+      <option value="All">All</option>
+      <option value="Not uploaded">Not uploaded</option>
+      <option value="Not Evaluated">Not Evaluated</option>
+      <option value="Evaluated">Evaluated</option>
     </select>
   </div>
 

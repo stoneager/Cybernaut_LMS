@@ -15,7 +15,9 @@ const Batches = () => {
   const [staff, setStaff] = useState([]);
   const [modules, setModules] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("All");
+  const [selectedYear, setSelectedYear] = useState("All");
   const [uniqueCourses, setUniqueCourses] = useState([]);
+  const [uniqueYears, setUniqueYears] = useState([]);
 
   const [students, setStudents] = useState([]);
   const [selected, setSelected] = useState({});
@@ -41,6 +43,24 @@ const Batches = () => {
           ...new Set(res.data.map(b => b.course?.courseName).filter(Boolean))
         ];
         setUniqueCourses(courses);
+
+        // Extract years from batch names (e.g., "FS-JUL25-B1" -> "25")
+        const years = [
+          ...new Set(res.data.map(b => {
+            if (b.batchName) {
+              const parts = b.batchName.split("-");
+              if (parts.length >= 2) {
+                // Extract year from "JUL25" -> "25"
+                const monthYear = parts[1];
+                const year = monthYear.slice(-2); // Get last 2 characters
+                return year;
+              }
+            }
+            return null;
+          }).filter(Boolean))
+        ].sort((a, b) => b.localeCompare(a)); // Sort descending (25, 24, 23...)
+        
+        setUniqueYears(years);
       })
       .catch(err => console.error("Error fetching batches:", err));
   };
@@ -183,10 +203,26 @@ const handleSave = async () => {
     }
   };
 
+  // Helper function to extract year from batch name
+  const getYearFromBatchName = (batchName) => {
+    if (!batchName) return null;
+    const parts = batchName.split("-");
+    if (parts.length >= 2) {
+      const monthYear = parts[1];
+      return monthYear.slice(-2); // Get last 2 characters
+    }
+    return null;
+  };
+
   const filteredBatches = batches.filter(
-    b =>
-      (selectedCourse === "All" || b.course?.courseName === selectedCourse) &&
-      b.batchName.toLowerCase().includes(searchQuery.toLowerCase())
+    b => {
+      const batchYear = getYearFromBatchName(b.batchName);
+      return (
+        (selectedCourse === "All" || b.course?.courseName === selectedCourse) &&
+        (selectedYear === "All" || batchYear === selectedYear) &&
+        b.batchName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
   );
 
   return (
@@ -204,7 +240,7 @@ const handleSave = async () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-8">
+      <div className="flex justify-between items-center mt-8 gap-4">
         <input type="text"
           placeholder="Search batches..."
           value={searchQuery}
@@ -212,19 +248,33 @@ const handleSave = async () => {
           className="border px-4 py-2 rounded w-full max-w-md"
         />
 
-        <select
-          value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="All">All Courses</option>
-          {uniqueCourses.map((course, idx) => (
-            <option key={idx} value={course}>{course}</option>
-          ))}
-        </select>
+        <div className="flex gap-3">
+          <select
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            className="border px-3 py-2 rounded"
+          >
+            <option value="All">All Courses</option>
+            {uniqueCourses.map((course, idx) => (
+              <option key={idx} value={course}>{course}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            className="border px-3 py-2 rounded"
+          >
+            <option value="All">All Years</option>
+            {uniqueYears.map((year, idx) => (
+              <option key={idx} value={year}>20{year}</option>
+            ))}
+          </select>
+        </div>
+
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 ml-4 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           + Add New Batch
         </button>

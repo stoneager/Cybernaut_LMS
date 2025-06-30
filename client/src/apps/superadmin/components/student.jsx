@@ -7,12 +7,41 @@ const Student = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("All");
   const [selectedBatch, setSelectedBatch] = useState("All");
+  const [selectedYear, setSelectedYear] = useState("All");
   const [uniqueCourses, setUniqueCourses] = useState([]);
   const [uniqueBatches, setUniqueBatches] = useState([]);
+  const [uniqueYears, setUniqueYears] = useState([]);
+  const [filteredBatches, setFilteredBatches] = useState([]);
 
   useEffect(() => {
     fetchStudents();
   }, []);
+
+  // Helper function to extract year from batch name
+  const getYearFromBatchName = (batchName) => {
+    if (!batchName) return null;
+    const parts = batchName.split("-");
+    if (parts.length >= 2) {
+      const monthYear = parts[1];
+      return monthYear.slice(-2); // Get last 2 characters
+    }
+    return null;
+  };
+
+  // Helper function to get course prefix from batch name
+  const getCourseFromBatchName = (batchName) => {
+    if (!batchName) return null;
+    const parts = batchName.split("-");
+    return parts[0]; // First part is course code (FS, DS, etc.)
+  };
+
+  // Course code to full name mapping
+  const courseMapping = {
+    "FS": "Full Stack Development",
+    "DS": "Data Science", 
+    "DA": "Data Analytics",
+    "TT": "Tech Trio"
+  };
 
   const fetchStudents = async () => {
   try {
@@ -25,16 +54,51 @@ const Student = () => {
     const courses = [...new Set(studentList.map((s) => s.course))];
     const batches = [...new Set(studentList.map((s) => s.batch))];
 
+    // Extract years from batch names
+    const years = [
+      ...new Set(studentList.map(s => getYearFromBatchName(s.batch)).filter(Boolean))
+    ].sort((a, b) => b.localeCompare(a)); // Sort descending
+
     setUniqueCourses(courses);
     setUniqueBatches(batches);
+    setUniqueYears(years);
+    setFilteredBatches(batches); // Initially show all batches
   } catch (err) {
     console.error("Failed to fetch students", err);
   }
 };
 
+// Update filtered batches when course selection changes
+useEffect(() => {
+  updateFilteredBatches();
+}, [selectedCourse, uniqueBatches]);
+
 useEffect(() => {
   filterStudents();
-}, [searchText, selectedCourse, selectedBatch, students]);
+}, [searchText, selectedCourse, selectedBatch, selectedYear, students]);
+
+const updateFilteredBatches = () => {
+  if (selectedCourse === "All") {
+    setFilteredBatches(uniqueBatches);
+  } else {
+    // Find the course code for the selected course
+    const courseCode = Object.keys(courseMapping).find(
+      code => courseMapping[code] === selectedCourse
+    );
+    
+    if (courseCode) {
+      const courseBatches = uniqueBatches.filter(batch => 
+        getCourseFromBatchName(batch) === courseCode
+      );
+      setFilteredBatches(courseBatches);
+    } else {
+      setFilteredBatches([]);
+    }
+  }
+  
+  // Reset batch selection when course changes
+  setSelectedBatch("All");
+};
 
 const filterStudents = () => {
   const filtered = students.filter((student) => {
@@ -43,8 +107,12 @@ const filterStudents = () => {
       .includes(searchText.toLowerCase());
     const courseMatch = selectedCourse === "All" || student.course === selectedCourse;
     const batchMatch = selectedBatch === "All" || student.batch === selectedBatch;
+    
+    // Year filter logic
+    const studentYear = getYearFromBatchName(student.batch);
+    const yearMatch = selectedYear === "All" || studentYear === selectedYear;
 
-    return nameMatch && courseMatch && batchMatch;
+    return nameMatch && courseMatch && batchMatch && yearMatch;
   });
   setFilteredStudents(filtered);
 };
@@ -102,8 +170,27 @@ const filterStudents = () => {
       className="appearance-none px-4 py-2 pr-8 rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="All">All Batches</option>
-      {uniqueBatches.map((batch, idx) => (
+      {filteredBatches.map((batch, idx) => (
         <option key={idx} value={batch}>{batch}</option>
+      ))}
+    </select>
+    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+      </svg>
+    </div>
+  </div>
+
+  {/* Year Dropdown */}
+  <div className="relative">
+    <select
+      value={selectedYear}
+      onChange={(e) => setSelectedYear(e.target.value)}
+      className="appearance-none px-4 py-2 pr-8 rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="All">All Years</option>
+      {uniqueYears.map((year, idx) => (
+        <option key={idx} value={year}>20{year}</option>
       ))}
     </select>
     <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">

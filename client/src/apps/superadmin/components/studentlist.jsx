@@ -12,7 +12,9 @@ const StudentList = () => {
   }, []);
 
   const fetchStudents = async () => {
-    const res = await axios.get('http://localhost:5000/api/students');
+    const res = await axios.get('http://localhost:5005/api/students', {
+      withCredentials: true
+    });
     setStudents(res.data);
 
     const uniqueBatches = [...new Set(res.data.map(s => s.batch))];
@@ -26,7 +28,9 @@ const StudentList = () => {
     if (batch === "All") {
       fetchStudents();
     } else {
-      const res = await axios.get(`http://localhost:5000/api/students/batch/${batch}`);
+      const res = await axios.get(`http://localhost:5005/api/students/batch/${batch}`, {
+        withCredentials: true
+      });
       setStudents(res.data);
     }
   };
