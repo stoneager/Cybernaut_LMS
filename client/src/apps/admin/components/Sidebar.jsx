@@ -47,16 +47,23 @@ const Sidebar = ({ children }) => {
 
   // Detect batch route change
   useEffect(() => {
-    const match = location.pathname.match(/^\/admin\/batch\/([^/]+)/);
+  const match = location.pathname.match(/^\/admin\/batch\/([^/]+)/);
 
-    if (match) {
-      setSelectedBatchId(match[1]);
-      if (!manuallyToggled) setShowBatchSubmenu(true);
-    } else {
-      setSelectedBatchId(null);
-      if (!manuallyToggled) setShowBatchSubmenu(false);
+
+  if (match) {
+    setSelectedBatchId(match[1]);
+    setShowBatchSubmenu(true);
+  } else if (location.pathname === "/admin/batches") {
+    setShowBatchSubmenu(true);
+    setSelectedBatchId(null);
+  } else {
+    setSelectedBatchId(null);
+    if (!manuallyToggled) {
+      setShowBatchSubmenu(false);
     }
-  }, [location.pathname, manuallyToggled]);
+  }
+}, [location.pathname]);
+
 
   const handleLogout = async () => {
     const token = localStorage.getItem("token");
@@ -142,24 +149,31 @@ return (
         {/* Batches */}
 <div>
   <div
-    onClick={() => {
-      toggleBatchSubmenu();
-      navigate("/admin/batches"); // always navigate to batches on click
-    }}
-    className={`flex items-center gap-4 px-4 py-3 my-1 rounded-xl cursor-pointer transition-all duration-200 ease-in-out ${
-      location.pathname.startsWith("/admin/batch/")
-        ? "bg-gray-200 text-gray-800"
-        : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
+  onClick={() => {
+  setManuallyToggled(true);
+  if (!showBatchSubmenu) setShowBatchSubmenu(true); // force it open
+  if (location.pathname !== "/admin/batches") {
+    navigate("/admin/batches");
+  }
+}}
+
+  className={`flex items-center gap-4 px-4 py-3 my-1 rounded-xl cursor-pointer transition-all duration-200 ease-in-out ${
+    location.pathname === "/admin/batches"
+      ? "bg-gray-900 text-white shadow-lg shadow-gray-900/20"
+      : location.pathname.startsWith("/admin/batch/")
+      ? "bg-gray-200 text-gray-800"
+      : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
+  }`}
+>
+  <FaChalkboardTeacher className="text-lg text-slate-600" />
+  <span className="text-sm font-semibold tracking-wide">My Batches</span>
+  <FaChevronDown
+    className={`ml-auto transition-transform duration-200 text-slate-600 ${
+      showBatchSubmenu ? "rotate-180" : ""
     }`}
-  >
-    <FaChalkboardTeacher className="text-lg text-slate-600" />
-    <span className="text-sm font-semibold tracking-wide">My Batches</span>
-    <FaChevronDown
-      className={`ml-auto transition-transform duration-200 text-slate-600 ${
-        showBatchSubmenu ? "rotate-180" : ""
-      }`}
-    />
-  </div>
+  />
+</div>
+
 
   {/* Subtopics if inside a batch */}
   {showBatchSubmenu && selectedBatchId && (

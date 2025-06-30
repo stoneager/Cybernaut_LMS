@@ -16,7 +16,7 @@ function AppRoutes() {
           path="/"
           element={
             <PrivateRoute>
-              <Sidebar>
+              <Sidebar pageTitle="Student Dashboard">
                 <StudentHome />
               </Sidebar>
             </PrivateRoute>
@@ -27,7 +27,7 @@ function AppRoutes() {
           path="/chat/:module/:type"
           element={
             <PrivateRoute>
-              <Sidebar>
+              <Sidebar pageTitle="Chat">
                 <StudentChat />
               </Sidebar>
             </PrivateRoute>
@@ -38,7 +38,7 @@ function AppRoutes() {
           path="/batch/:batchId"
           element={
             <PrivateRoute>
-              <Sidebar>
+              <Sidebar pageTitle="My Course">
                 <StudentBatch />
               </Sidebar>
             </PrivateRoute>
@@ -49,7 +49,7 @@ function AppRoutes() {
           path="/chat"
           element={
             <PrivateRoute>
-              <Sidebar>
+              <Sidebar pageTitle="Chat">
                 <StudentChat />
               </Sidebar>
             </PrivateRoute>
@@ -60,13 +60,12 @@ function AppRoutes() {
           path="/settings"
           element={
             <PrivateRoute>
-              <Sidebar>
+              <Sidebar pageTitle="Settings">
                 <Settings />
               </Sidebar>
             </PrivateRoute>
           }
         />
-
       </Routes>
     </>
   );
