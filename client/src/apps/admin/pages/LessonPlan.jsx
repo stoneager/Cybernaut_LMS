@@ -3,6 +3,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaPlus, FaEdit, FaFlask, FaLink, FaFilePdf } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function LessonPlan() {
   const { batchId } = useParams();
@@ -126,19 +129,26 @@ export default function LessonPlan() {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
-
+      toast.success("Note added Successfully");
       setShowModal(false);
       fetchNotes();
     } catch (e) {
-      console.error(e);
-      alert(e.response?.data?.error || 'Error saving note');
-    }
+  console.error(e);
+  if (e.response?.data?.error?.includes("already exists")) {
+    toast.error(`Day ${form.day} already exists for this batch`, {
+      position: "top-right",
+    });
+  } else {
+    toast.error(e.response?.data?.error || 'Error saving note');
+  }
+}
+
   };
 
   const handleEvaluate = async (studentId, marks, setMarks) => {
     const mark = parseInt(marks[studentId]);
-    if (isNaN(mark) || mark < 0 || mark > 100) {
-      alert("Please enter a valid mark between 0 and 100");
+    if (isNaN(mark) || mark < 0 || mark > 10) {
+      toast.error("Please enter a valid mark between 0 and 10");
       return;
     }
     try {

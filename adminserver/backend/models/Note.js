@@ -12,4 +12,7 @@ const noteSchema = new mongoose.Schema({
   day: { type: Number, required: true }
 }, { timestamps: true });
 
+// ✅ Enforce unique day per batch
+noteSchema.index({ batch: 1, day: 1 }, { unique: true });
+
 module.exports = mongoose.model('Note', noteSchema);

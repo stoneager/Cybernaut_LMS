@@ -41,7 +41,7 @@ export default function Salary() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-white via-blue-50 to-white min-h-screen text-black">
+    <div className="bg-gradient-to-br from-white via-blue-50 to-white min-h-screen h-[89vh] text-black">
       
       <h2 className="text-3xl font-bold mb-6 text-blue-900">Salary Payments</h2>
       <div className="overflow-x-auto">

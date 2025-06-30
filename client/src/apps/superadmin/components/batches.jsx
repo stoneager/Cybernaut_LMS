@@ -190,7 +190,7 @@ const handleSave = async () => {
   );
 
   return (
-    <div className="p-4 bg-gradient-to-br from-white via-blue-50 to-white text-blue-900 space-y-6">
+    <div className="p-4 bg-gradient-to-br from-white via-blue-50 to-white text-blue-900 h-[89vh] space-y-6">
       <h1 className="text-2xl font-bold mb-2">Batch Management</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

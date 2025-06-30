@@ -23,7 +23,7 @@ router.get("/marks", async (req, res) => {
 
     const matchStage = {
       student: { $in: studentIds },
-      [`marksObtained.${typeIndex}`]: { $ne: -1 }
+      [`marksObtained.${typeIndex}`]: { $gte : 0 }
     };
     if (module) matchStage.module = module;
 

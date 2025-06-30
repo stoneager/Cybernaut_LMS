@@ -47,7 +47,7 @@ const Payment = () => {
     try {
       const res = await axios.post(`http://localhost:5001/api/salary/${admin._id}/pay`);
       const { orderId, amount, adminName } = res.data;
-
+      
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount,

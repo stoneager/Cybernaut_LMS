@@ -45,10 +45,8 @@ router.post('/', async (req, res) => {
 
     await note.save();
 
-    // 🔁 Fetch all students of the batch
     const students = await Student.find({ batch });
 
-    // 📝 Create a report for each student
     const reports = students.map(student => ({
       student: student._id,
       module,
@@ -60,9 +58,20 @@ router.post('/', async (req, res) => {
 
     res.json({ message: 'Note added and reports initialized', note });
   } catch (err) {
-    res.status(400).json({ error: 'Failed to add note or create reports', details: err.message });
+    if (err.code === 11000) {
+      return res.status(400).json({
+        error: `Day ${day} already exists for this batch.`,
+        details: err.message
+      });
+    }
+
+    res.status(400).json({
+      error: 'Failed to add note or create reports',
+      details: err.message
+    });
   }
 });
+
 
 // ✅ PUT to edit note
 router.put('/:id', async (req, res) => {
