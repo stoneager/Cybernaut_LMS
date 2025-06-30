@@ -118,10 +118,10 @@ const ReportPage = () => {
             const studentName = s.student?.user?.name || "Unknown";
             const renderBadge = (val) => {
   if (val === -1) {
-    return <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-semibold">NU</span>;
+    return <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-semibold">NE</span>;
   }
   if (val === -2) {
-    return <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs font-semibold">NE</span>;
+    return <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs font-semibold">NU</span>;
   }
   return <span className="text-sm font-semibold">{val}</span>;
 };

@@ -12,7 +12,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Topbar from "./Topbar";
 
-const Sidebar = ({ children }) => {
+const Sidebar = ({ children ,pageTitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -156,12 +156,11 @@ const Sidebar = ({ children }) => {
       </div>
 
       {/* Main Content with Topbar */}
-      <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
-        <Topbar pageTitle="Dashboard" userName={student?.user?.name || "Student"} />
+       <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
+        <Topbar pageTitle={pageTitle} userName={student?.user?.name || "Student"} />
         <div className="pt-4 px-6 pb-6">
           {children}
         </div>
-
       </div>
     </div>
   );
