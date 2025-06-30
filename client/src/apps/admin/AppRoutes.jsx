@@ -12,6 +12,7 @@ import SuperAdminChat from './pages/SuperAdminChat';
 import { ToastContainer, toast } from 'react-toastify';
 import Sidebar from './components/Sidebar';
 import Settings from './pages/Settings';
+import Quiz from './pages/Quiz';
 
 function AppRoutes() {
 
@@ -75,15 +76,16 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/evaluate/:batch/:module/:title/:day"
+          path="/batch/:batchId/quiz"
           element={
             <PrivateRoute>
               <Sidebar>
-              <EvaluationPage />
+              <Quiz />
               </Sidebar>
             </PrivateRoute>
           }
         />
+
         <Route
           path="/batch/:batchId/report"
           element={

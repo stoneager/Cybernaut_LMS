@@ -98,7 +98,7 @@ const Sidebar = ({ children }) => {
     if (path === "/admin/settings") return "Settings";
     if (path === "/admin/superadmin-chat") return "SuperAdmin Chat";
     if (path.includes("/lesson-plan")) return "Lesson Plan";
-    if (path.includes("/evaluation")) return "Evaluation";
+    if (path.includes("/quiz")) return "Quiz";
     if (path.includes("/report")) return "Report";
     if (path.includes("/chat")) return "Batch Chat";
     return "Admin Dashboard";
@@ -200,6 +200,19 @@ return (
         <FaFileAlt className="text-sm" />
         <span className="text-sm font-medium">Report</span>
       </NavLink>
+
+      <NavLink
+        to={`/admin/batch/${selectedBatchId}/quiz`}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-2 my-1 rounded-lg transition-all duration-200 ${
+            isActive ? "bg-gray-900 text-white shadow-md" : "hover:bg-blue-50 text-gray-600 hover:text-gray-700"
+          }`
+        }
+      >
+        <FaFileAlt className="text-sm" />
+        <span className="text-sm font-medium">Quiz</span>
+      </NavLink>
+
       <NavLink
         to={`/admin/batch/${selectedBatchId}/chat`}
         className={({ isActive }) =>
@@ -245,7 +258,7 @@ return (
           {({ isActive }) => (
             <>
               <FaCog className={`text-lg ${isActive ? "text-white" : "text-slate-600"}`} />
-              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Settings</span>
+              <span className={`text-sm font-semibold tracking-wide ${isActive ? "text-white" : "text-gray-700"}`}>Profile</span>
             </>
           )}
         </NavLink>

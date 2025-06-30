@@ -15,6 +15,7 @@ const adminDashboard = require('./routes/adminDasboard');
 const studentRoutes = require('./routes/studentRoutes.js');
 const statisticsRoutes = require("./routes/statisticsRoutes");
 const settingsRoutes = require('./routes/settingsRoute.js');
+const quizRoutes = require('./routes/quiz');
 
 const app = express();
 const allowedOrigins = [
@@ -53,5 +54,7 @@ app.use('/api/dashboard',adminDashboard);
 app.use("/api/students", studentRoutes);
 app.use('/api/settings',settingsRoutes);
 app.use("/statistics", statisticsRoutes);
+app.use('/api/quiz', quizRoutes);
+
 
 app.listen(5002, () => console.log('Admin server on 5002'));
