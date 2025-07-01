@@ -25,38 +25,42 @@ const Settings = () => {
     confirmPassword: false,
   });
 
-
-
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5002/api/settings/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setForm(res.data);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5002/api/settings/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setForm(res.data);
+      } catch (err) {
+        toast.error("Failed to fetch profile");
+      }
     };
 
     fetchProfile();
   }, []);
 
-
-
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
-    await axios.put("http://localhost:5002/api/settings/me", form, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    toast.success("Profile updated successfully!");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put("http://localhost:5002/api/settings/me", form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      toast.error("Failed to save profile");
+    }
   };
 
   const addSkill = async () => {
     if (!newSkill.trim()) return;
 
-    const token = localStorage.getItem("token");
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.post(
         "http://localhost:5002/api/settings/add-skill",
         { skill: newSkill.trim() },
@@ -72,9 +76,8 @@ const Settings = () => {
     }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e) =>
     setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
-  };
 
   const toggleVisibility = (field) => {
     setShowPassword((prev) => ({
@@ -84,14 +87,18 @@ const Settings = () => {
   };
 
   const submitPasswordChange = async () => {
-    const token = localStorage.getItem("token");
+    const { newPassword, confirmPassword } = passwordForm;
+
+    if (newPassword !== confirmPassword) {
+      return toast.error("Passwords do not match");
+    }
+
     try {
+      const token = localStorage.getItem("token");
       await axios.put(
         "http://localhost:5000/auth/change-password",
         passwordForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Password changed successfully!");
       setPasswordForm({
@@ -105,26 +112,16 @@ const Settings = () => {
   };
 
   return (
-    <div
-      className={`p-4 flex h-[100vh] ${
-        darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-black"
-      } relative`}
-    >
-
-
-      <div className="flex-1 p-0 overflow-y-auto">
+    <div className="p-4 flex h-[100vh] bg-gray-50 text-black dark:bg-gray-900 dark:text-white">
+      <div className="flex-1 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">Profile & Settings</h1>
         <p className="text-gray-500 mb-6 dark:text-gray-400">
           Manage your account settings and preferences
         </p>
 
-        <div
-          className={`${
-            darkMode ? "bg-gray-800" : "bg-white"
-          } shadow rounded-lg overflow-hidden`}
-        >
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
           {/* Header */}
-          <div className="flex items-center h-25 p-6 border-b dark:border-gray-600">
+          <div className="flex items-center p-6 border-b dark:border-gray-600">
             <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-3xl text-blue-500 font-bold">
               {form.name?.charAt(0)}
             </div>
@@ -205,7 +202,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* Skills Section */}
+              {/* Skills */}
               <div>
                 <label className="text-sm font-medium">Skills</label>
                 <div className="flex flex-wrap mt-2 gap-2">

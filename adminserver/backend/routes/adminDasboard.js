@@ -14,7 +14,7 @@ router.get('/lecturer', Verify, async (req, res) => {
     // Get admin info
     const admin = await Admin.findOne({ user: userId }).populate('user');
     if (!admin) return res.status(404).json({ message: 'Admin not found' });
-
+    
     const currentMonth = new Date().getMonth();
     const isPaidThisMonth = admin.paidForMonth === currentMonth;
 
