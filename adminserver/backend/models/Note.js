@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const noteSchema = new mongoose.Schema({
   title: { type: String, required: true },
   meetlink: String,
-  quizlink: String,
   assignmentlink: String,
   assignmentS3Url: { type: String, default: "" },
   batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },

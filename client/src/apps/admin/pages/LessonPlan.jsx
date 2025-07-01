@@ -10,7 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function LessonPlan() {
   const { batchId } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
+  const [form, setForm] = useState({ title: '', meetlink: '', assignmentlink: '', day: '' });
   const [pdfFile, setPdfFile] = useState(null);
   const [adminId, setAdminId] = useState(null);
   const [modules, setModules] = useState([]);
@@ -64,15 +64,14 @@ export default function LessonPlan() {
 
   const openModalForAdd = () => {
     setEditingNoteId(null);
-    setForm({ title: '', meetlink: '', quizlink: '', assignmentlink: '', day: '' });
+    setForm({ title: '', meetlink: '', assignmentlink: '', day: '' });
     setPdfFile(null);
     setShowModal(true);
   };
 
   const openModalForEdit = note => {
     setForm({
-      title: note.title, meetlink: note.meetlink,
-      quizlink: note.quizlink, assignmentlink: note.assignmentlink, day: note.day
+      title: note.title, meetlink: note.meetlink, assignmentlink: note.assignmentlink, day: note.day
     });
     setEditingNoteId(note._id);
     setPdfFile(null);
@@ -213,9 +212,6 @@ export default function LessonPlan() {
     </div>
 
     <div className="text-sm mt-4 grid grid-cols-1 md:grid-cols-3 gap-20">
-      <a href={notes[0].quizlink} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
-        <FaLink className="text-sm" /> Quiz
-      </a>
       {notes[0].assignmentlink && (
         <a href={notes[0].assignmentlink} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
           <FaLink className="text-sm" /> Assignment
@@ -223,7 +219,7 @@ export default function LessonPlan() {
       )}
       {notes[0].assignmentS3Url && (
         <a href={notes[0].assignmentS3Url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded hover:bg-gray-800">
-          <FaFilePdf className="text-sm" /> PDF
+          <FaFilePdf className="text-sm" />Assignment PDF
         </a>
       )}
     </div>
@@ -322,7 +318,6 @@ export default function LessonPlan() {
             <div className="space-y-4">
               <input className="w-full border p-3 rounded-lg" placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
               <input className="w-full border p-3 rounded-lg" placeholder="Meet Link" value={form.meetlink} onChange={e => setForm({ ...form, meetlink: e.target.value })} />
-              <input className="w-full border p-3 rounded-lg" placeholder="Quiz Link" value={form.quizlink} onChange={e => setForm({ ...form, quizlink: e.target.value })} />
               <input className="w-full border p-3 rounded-lg" placeholder="External Assignment Link" value={form.assignmentlink} onChange={e => setForm({ ...form, assignmentlink: e.target.value })} />
               <input type="number" className="w-full border p-3 rounded-lg" placeholder="Day" value={form.day} onChange={e => setForm({ ...form, day: e.target.value })} />
               <input type="file" accept="application/pdf" className="w-full border p-2 rounded-lg bg-gray-100" onChange={e => setPdfFile(e.target.files[0])} />

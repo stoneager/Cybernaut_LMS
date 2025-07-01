@@ -22,7 +22,6 @@ router.post('/', async (req, res) => {
   const {
     title,
     meetlink,
-    quizlink,
     assignmentlink,
     assignmentS3Url,
     batch,
@@ -35,7 +34,6 @@ router.post('/', async (req, res) => {
     const note = new Note({
       title,
       meetlink,
-      quizlink,
       assignmentlink,
       assignmentS3Url,
       batch,
@@ -79,7 +77,6 @@ router.put('/:id', async (req, res) => {
   const {
     title,
     meetlink,
-    quizlink,
     assignmentlink,
     assignmentS3Url,
     batch,
@@ -94,7 +91,6 @@ router.put('/:id', async (req, res) => {
       {
         title,
         meetlink,
-        quizlink,
         assignmentlink,
         assignmentS3Url,
         batch,
