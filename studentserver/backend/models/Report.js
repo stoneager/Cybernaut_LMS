@@ -24,6 +24,16 @@ const reportSchema = new mongoose.Schema({
       message: "marksObtained must be an array of 3 numbers"
     }
   },
+  quizAnswers: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function (answers) {
+        return answers.every(ans => ['A', 'B', 'C', 'D', null].includes(ans));
+      },
+      message: "Each answer must be 'A', 'B', 'C', 'D', or null"
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

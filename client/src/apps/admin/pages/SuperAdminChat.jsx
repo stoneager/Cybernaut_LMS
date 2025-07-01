@@ -11,7 +11,6 @@ export default function SuperAdminChat() {
   const [msg, setMsg] = useState("");
   const chatRef = useRef();
 
-  // Fetch admin name
   useEffect(() => {
     const fetchAdmin = async () => {
       try {
@@ -19,7 +18,6 @@ export default function SuperAdminChat() {
         const res = await axios.get("http://localhost:5000/auth/admin/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const name = res.data.user.name;
         setSender(name);
         setRoom(`admins/${encodeURIComponent(name.trim())}`);
@@ -30,12 +28,10 @@ export default function SuperAdminChat() {
     fetchAdmin();
   }, []);
 
-  // Join chat room and receive messages
   useEffect(() => {
     if (!room || !sender) return;
 
     socket.emit("joinRoom", { name: sender, room });
-
     socket.on("chatHistory", (history) => setMessages(history));
     socket.on("message", (msg) => setMessages((prev) => [...prev, msg]));
 
@@ -46,7 +42,6 @@ export default function SuperAdminChat() {
     };
   }, [room, sender]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
@@ -60,53 +55,52 @@ export default function SuperAdminChat() {
   if (!room) return null;
 
   return (
-    <div className="flex flex-col h-[88vh] top-0 bg-white rounded-lg shadow overflow-hidden">
+    <div className="flex flex-col h-[88vh] top-0 bg-white dark:bg-black text-black dark:text-white rounded-lg shadow overflow-hidden">
 
       {/* Messages */}
       <div
         ref={chatRef}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-100"
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-100 dark:bg-gray-900"
       >
         {messages.map((m, i) => {
-  const [name, ...text] = m.split(": ");
-  const isSender = name === sender;
-  const displayName = isSender ? "You" : "Super Admin";
+          const [name, ...text] = m.split(": ");
+          const isSender = name === sender;
+          const displayName = isSender ? "You" : "Super Admin";
 
-  return (
-    <div
-      key={i}
-      className={`flex flex-col ${
-        isSender ? "items-end" : "items-start"
-      }`}
-    >
-      <div className="text-xs text-gray-500 font-medium mb-1">{displayName}</div>
-      <div
-        className={`max-w-sm px-4 py-2 rounded-xl text-sm break-words whitespace-pre-wrap ${
-          isSender
-            ? "bg-blue-500 text-white self-end ml-auto rounded-br-none"
-            : "bg-white text-black self-start mr-auto border rounded-bl-none"
-        }`}
-      >
-        {text.join(": ")}
-      </div>
-    </div>
-  );
-})}
-
+          return (
+            <div
+              key={i}
+              className={`flex flex-col ${isSender ? "items-end" : "items-start"}`}
+            >
+              <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">
+                {displayName}
+              </div>
+              <div
+                className={`max-w-sm px-4 py-2 rounded-xl text-sm break-words whitespace-pre-wrap ${
+                  isSender
+                    ? "bg-blue-600 text-white self-end ml-auto rounded-br-none"
+                    : "bg-white dark:bg-gray-800 text-black dark:text-white self-start mr-auto border border-gray-300 dark:border-gray-700 rounded-bl-none"
+                }`}
+              >
+                {text.join(": ")}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Input */}
-      <div className="p-3 bg-white border-t flex items-center gap-2">
+      <div className="p-3 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
         <input
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          className="flex-1 bg-gray-100 border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full px-4 py-2 text-sm outline-none text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400"
           placeholder="Type a message..."
         />
         <button
           onClick={sendMessage}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-full text-sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm"
         >
           Send
         </button>

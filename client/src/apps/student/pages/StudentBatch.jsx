@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from "../api";
-import { FaVideo, FaQuestionCircle, FaFileAlt, FaUpload } from 'react-icons/fa';
+import { FaVideo, FaQuestionCircle, FaFileAlt, FaUpload , FaCheckCircle } from 'react-icons/fa';
 
 export default function StudentBatch() {
   const { batchId } = useParams();
@@ -11,8 +11,11 @@ export default function StudentBatch() {
   const [notesMap, setNotesMap] = useState({});
   const [activeModule, setActiveModule] = useState(null);
   const [reports, setReports] = useState([]);
+  const [quizzesMap, setQuizzesMap] = useState({});
   const navigate = useNavigate();
 
+
+  
   useEffect(() => {
     const fetchStudent = async () => {
       try {
@@ -60,7 +63,24 @@ export default function StudentBatch() {
           };
         }
 
+        const quizMap = {};
+for (const module in allNotes) {
+  for (const note of [...allNotes[module].today, ...allNotes[module].others]) {
+    try {
+      const res = await api.get(`/api/quiz/by-note/${note._id}`);
+      if (res.data?._id) {
+        quizMap[note._id] = res.data;
+      }
+    } catch {
+      console.error("No quiz uploaded for this note");
+    }
+  }
+}
+setQuizzesMap(quizMap);
+
         setNotesMap(allNotes);
+
+
         if (latestModule) setActiveModule(latestModule);
       } catch (err) {
         console.error('Error loading batch or notes:', err);
@@ -89,8 +109,14 @@ export default function StudentBatch() {
     return match ? match.marksObtained?.[2] ?? -2 : -2;
   };
 
+  const getQuizMark = (module, day) => {
+    const match = reports.find(r => r.module === module && r.day === day);
+    return match ? match.marksObtained?.[1] ?? -2 : -2;
+  };
+
   const renderNoteCard = (note, student, batchId, module, large = false, index = 0) => {
-    const mark = getAssignmentMark(module, note.day);
+    const assignmentMark = getAssignmentMark(module, note.day);
+    const quizMark = getQuizMark(module, note.day);
 
     const viewAssignment = async () => {
       try {
@@ -109,7 +135,7 @@ export default function StudentBatch() {
     return (
       <div
         key={note._id}
-        className={`bg-white border border-gray-200 rounded-xl shadow-md p-5 flex flex-col gap-4 transition hover:shadow-lg`}
+        className="bg-white border border-gray-200 rounded-xl shadow-md p-5 flex flex-col gap-4 transition hover:shadow-lg"
       >
         <h4 className="text-lg font-semibold text-gray-800">Day {note.day}: {note.title}</h4>
         <div className="flex flex-wrap gap-3">
@@ -119,12 +145,31 @@ export default function StudentBatch() {
           >
             <FaVideo /> Join Meet
           </button>
-          <button
-            onClick={() => window.open(note.quizlink, '_blank')}
-            className="flex items-center gap-2 text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-          >
-            <FaQuestionCircle /> Attempt Quiz
-          </button>
+
+          {!quizzesMap[note._id] ? (
+  <button
+    disabled
+    className="flex items-center gap-2 text-sm px-4 py-2 rounded bg-gray-300 text-gray-700 cursor-not-allowed"
+  >
+    <FaQuestionCircle /> No Quiz Available
+  </button>
+) : quizMark >= 0 ? (
+  <button
+    disabled
+    className="flex items-center gap-2 text-sm px-4 py-2 rounded bg-green-500 text-white cursor-not-allowed"
+  >
+    <FaCheckCircle /> Submitted
+  </button>
+) : (
+  <button
+    onClick={() => navigate(`/student/quiz/attempt/${note._id}`)}
+    className="flex items-center gap-2 text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+  >
+    <FaQuestionCircle /> Attempt Quiz
+  </button>
+)}
+
+
           <button
             onClick={viewAssignment}
             className="flex items-center gap-2 text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
@@ -132,8 +177,9 @@ export default function StudentBatch() {
             <FaFileAlt /> View Assignment
           </button>
         </div>
+
         <div className="flex items-center gap-3 mt-2">
-          {mark === -2 ? (
+          {assignmentMark === -2 ? (
             <>
               <input
                 type="file"
@@ -157,10 +203,10 @@ export default function StudentBatch() {
                 <FaUpload />
               </button>
             </>
-          ) : mark === -1 ? (
+          ) : assignmentMark === -1 ? (
             <p className="text-sm text-yellow-600 font-medium">Submitted (Pending Evaluation)</p>
           ) : (
-            <p className="text-sm text-green-700 font-semibold">Mark: {mark}</p>
+            <p className="text-sm text-green-700 font-semibold">Mark: {assignmentMark}</p>
           )}
         </div>
       </div>
@@ -200,7 +246,6 @@ export default function StudentBatch() {
 
       {/* Notes Section */}
       <div className="mb-10">
-        {/* Latest Note */}
         {currentModuleNotes.today.length > 0 && (
           <div className="mb-10">
             <h4 className="text-md font-semibold text-green-600 mb-3">Latest Note</h4>
@@ -210,7 +255,6 @@ export default function StudentBatch() {
           </div>
         )}
 
-        {/* Older Notes 2 per row */}
         {currentModuleNotes.others.length > 0 && (
           <div className="grid md:grid-cols-2 gap-6">
             {currentModuleNotes.others.map((note, index) =>
