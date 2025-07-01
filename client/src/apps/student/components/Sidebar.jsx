@@ -7,12 +7,13 @@ import {
   FaSignOutAlt,
   FaUserCircle,
   FaComments,
+  FaChartBar, // <-- Added for Quiz Reports
 } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Topbar from "./Topbar";
 
-const Sidebar = ({ children ,pageTitle }) => {
+const Sidebar = ({ children, pageTitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -125,6 +126,20 @@ const Sidebar = ({ children ,pageTitle }) => {
                 <FaComments className="text-lg" />
                 <span className="text-sm font-semibold tracking-wide">Chat</span>
               </NavLink>
+
+              <NavLink
+                to="/student/reports"
+                className={({ isActive }) =>
+                  `flex items-center gap-4 px-4 py-3 my-1 rounded-xl transition-all duration-200 ease-in-out ${
+                    isActive
+                      ? "bg-gray-900 text-white shadow-lg"
+                      : "hover:bg-blue-50 text-gray-700 hover:shadow-sm"
+                  }`
+                }
+              >
+                <FaChartBar className="text-lg" />
+                <span className="text-sm font-semibold tracking-wide">Quiz Reports</span>
+              </NavLink>
             </>
           )}
 
@@ -156,11 +171,9 @@ const Sidebar = ({ children ,pageTitle }) => {
       </div>
 
       {/* Main Content with Topbar */}
-       <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
+      <div className="flex-1 overflow-y-auto bg-[#f8fafc]">
         <Topbar pageTitle={pageTitle} userName={student?.user?.name || "Student"} />
-        <div className="pt-4 px-6 pb-6">
-          {children}
-        </div>
+        <div className="pt-4 px-6 pb-6">{children}</div>
       </div>
     </div>
   );
