@@ -37,30 +37,32 @@ export default function AdminHome() {
 
 
   return (
-        <div className="max-w-[90%] mx-auto pt-6 min-h-[80vh]">
-          <h1 className="text-3xl font-bold  text-gray-800">Your Teaching Batches</h1>
+        <div className="max-w-[90%] mx-auto pt-6 min-h-[80vh] dark:text-white">
+  <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+    Your Teaching Batches
+  </h1>
 
-          {batches.length === 0 ? (
-            <p className="text-gray-500 text-lg">No courses assigned to you yet.</p>
-          ) : (
-            <div className="flex flex-wrap gap-6 overflow-y-auto max-h-[70vh] pr-2 py-10 ">
-              {batches.map((batch, idx) => {
-                const course = batch.course;
+  {batches.length === 0 ? (
+    <p className="text-gray-500 text-lg">No courses assigned to you yet.</p>
+  ) : (
+    <div className="flex flex-wrap gap-6 overflow-y-auto max-h-[70vh] pr-2 py-10">
+      {batches.map((batch, idx) => {
+        const course = batch.course;
+        return (
+          <CourseCard 
+            key={idx}
+            image={courseImages[batch.course.image]}
+            name={course?.courseName}
+            startDate={batch?.startDate}
+            batch={batch?.batchName}
+            onClick={() => handleCourseClick(batch?._id)}
+          />
+        );
+      })}
+    </div>
+  )}
+</div>
 
-                return (
-                  <CourseCard 
-                    key={idx}
-                    image={courseImages[batch.course.image]}
-                    name={course?.courseName}
-                    startDate={batch?.startDate}
-                    batch={batch?.batchName}
-                    onClick={() => handleCourseClick(batch?._id)}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
 
 
   );

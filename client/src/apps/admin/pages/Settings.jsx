@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 const Settings = () => {
   const [tab, setTab] = useState("profile");
@@ -25,6 +25,8 @@ const Settings = () => {
     confirmPassword: false,
   });
 
+
+
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
@@ -36,6 +38,8 @@ const Settings = () => {
 
     fetchProfile();
   }, []);
+
+
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -101,22 +105,34 @@ const Settings = () => {
   };
 
   return (
-    <div className="p-4 flex h-[100vh] bg-gray-50">
+    <div
+      className={`p-4 flex h-[100vh] ${
+        darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-black"
+      } relative`}
+    >
+
+
       <div className="flex-1 p-0 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">Profile & Settings</h1>
-        <p className="text-gray-500 mb-6">
+        <p className="text-gray-500 mb-6 dark:text-gray-400">
           Manage your account settings and preferences
         </p>
 
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div
+          className={`${
+            darkMode ? "bg-gray-800" : "bg-white"
+          } shadow rounded-lg overflow-hidden`}
+        >
           {/* Header */}
-          <div className="flex items-center h-25 p-6 border-b">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-blue-500 font-bold">
+          <div className="flex items-center h-25 p-6 border-b dark:border-gray-600">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-3xl text-blue-500 font-bold">
               {form.name?.charAt(0)}
             </div>
             <div className="ml-4">
               <h2 className="text-lg font-semibold">{form.name}</h2>
-              <p className="text-sm text-gray-500">{form.email}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                {form.email}
+              </p>
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                 Lecturer
               </span>
@@ -124,12 +140,12 @@ const Settings = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b">
+          <div className="flex border-b dark:border-gray-600">
             <button
               className={`flex-1 py-3 text-center font-semibold ${
                 tab === "profile"
-                  ? "bg-gray-100 border-b-2 border-blue-600"
-                  : "bg-white"
+                  ? "bg-gray-100 dark:bg-gray-700 border-b-2 border-blue-600"
+                  : "bg-white dark:bg-gray-800"
               }`}
               onClick={() => setTab("profile")}
             >
@@ -138,8 +154,8 @@ const Settings = () => {
             <button
               className={`flex-1 py-3 text-center font-semibold ${
                 tab === "password"
-                  ? "bg-gray-100 border-b-2 border-blue-600"
-                  : "bg-white"
+                  ? "bg-gray-100 dark:bg-gray-700 border-b-2 border-blue-600"
+                  : "bg-white dark:bg-gray-800"
               }`}
               onClick={() => setTab("password")}
             >
@@ -157,7 +173,7 @@ const Settings = () => {
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    className="w-full mt-1 border rounded px-3 py-2"
+                    className="w-full mt-1 border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
                 <div>
@@ -166,7 +182,7 @@ const Settings = () => {
                     disabled
                     name="email"
                     value={form.email}
-                    className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
+                    className="w-full mt-1 border rounded px-3 py-2 bg-gray-100 cursor-not-allowed dark:bg-gray-600"
                   />
                 </div>
                 <div>
@@ -175,7 +191,7 @@ const Settings = () => {
                     name="phone"
                     value={form.phone}
                     onChange={handleChange}
-                    className="w-full mt-1 border rounded px-3 py-2"
+                    className="w-full mt-1 border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
                 <div>
@@ -184,7 +200,7 @@ const Settings = () => {
                     name="department"
                     value={form.department}
                     onChange={handleChange}
-                    className="w-full mt-1 border rounded px-3 py-2"
+                    className="w-full mt-1 border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
               </div>
@@ -196,7 +212,7 @@ const Settings = () => {
                   {form.specialisation?.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
+                      className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full dark:bg-blue-900 dark:text-white"
                     >
                       {skill}
                     </span>
@@ -206,7 +222,7 @@ const Settings = () => {
                 <div className="flex mt-4 gap-2">
                   <input
                     type="text"
-                    className="border rounded px-3 py-2 flex-1"
+                    className="border rounded px-3 py-2 flex-1 dark:bg-gray-700 dark:border-gray-600"
                     placeholder="Add new skill..."
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
@@ -233,7 +249,7 @@ const Settings = () => {
           {tab === "password" && (
             <div className="p-6 space-y-4">
               <h2 className="text-xl font-bold">Change Password</h2>
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-300">
                 Update your password to keep your account secure
               </p>
 
@@ -253,7 +269,7 @@ const Settings = () => {
                         name={field}
                         value={passwordForm[field]}
                         onChange={handlePasswordChange}
-                        className="w-full border px-3 py-2 rounded"
+                        className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600"
                       />
                       <span
                         onClick={() => toggleVisibility(field)}

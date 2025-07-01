@@ -4,7 +4,6 @@ import AdminLayout from "../components/AdminLayout";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-
 const ReportPage = () => {
   const { batchId } = useParams();
   const [search, setSearch] = useState("");
@@ -22,9 +21,9 @@ const ReportPage = () => {
     try {
       const res = await axios.get(`http://localhost:5002/api/reports/batch/${batchId}`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true
+        withCredentials: true,
       });
       setReports(res.data);
     } catch (err) {
@@ -35,19 +34,11 @@ const ReportPage = () => {
   const days = ["All", ...Array.from(new Set(reports.map((r) => `Day ${r.day}`)))];
   const moduleOptions = ["All", ...Array.from(new Set(reports.map((r) => r.module)))];
 
-  // Helper function to determine marks status
   const getMarksStatus = (marksObtained) => {
     if (!marksObtained || marksObtained.length === 0) return "Not uploaded";
-    
-    // Check if any marks are -2 (Not uploaded)
-    if (marksObtained.some(mark => mark === -2)) return "Not uploaded";
-    
-    // Check if any marks are -1 (Not evaluated)
-    if (marksObtained.some(mark => mark === -1)) return "Not Evaluated";
-    
-    // If all marks are >= 0, it's evaluated
-    if (marksObtained.every(mark => mark >= 0)) return "Evaluated";
-    
+    if (marksObtained.some((mark) => mark === -2)) return "Not uploaded";
+    if (marksObtained.some((mark) => mark === -1)) return "Not Evaluated";
+    if (marksObtained.every((mark) => mark >= 0)) return "Evaluated";
     return "Not uploaded";
   };
 
@@ -56,139 +47,143 @@ const ReportPage = () => {
     const matchesName = studentName.toLowerCase().includes(search.toLowerCase());
     const matchesDay = selectedDay === "All" || `Day ${s.day}` === selectedDay;
     const matchesModule = selectedModule === "All" || s.module === selectedModule;
-    
-    // Marks filter logic
     const marksStatus = getMarksStatus(s.marksObtained);
     const matchesMarks = selectedMarksFilter === "All" || marksStatus === selectedMarksFilter;
-
     return matchesName && matchesDay && matchesModule && matchesMarks;
   });
 
   return (
-      <div className="px-4">
-      
-      {/* Combined Search and Filters */}
-<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6 mb-6 px-4">
-  
-  {/* Search */}
-  <div className="relative w-full md:max-w-md">
-    <input
-      type="text"
-      placeholder="Search Student"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="w-full py-3 pl-12 pr-4 border rounded-full focus:outline-none shadow-sm text-gray-700"
-    />
-    <FaSearch className="absolute left-4 top-3.5 text-gray-400" />
-  </div>
+    <div className="px-4 py-6 bg-white dark:bg-black min-h-screen transition-all">
+      {/* Filters and Search */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 px-4">
+        {/* Search */}
+        <div className="relative w-full md:max-w-md">
+          <input
+            type="text"
+            placeholder="Search Student"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full py-3 pl-12 pr-4 border rounded-full shadow-sm focus:outline-none text-gray-800 dark:text-white dark:bg-gray-900 dark:border-gray-700"
+          />
+          <FaSearch className="absolute left-4 top-3.5 text-gray-400" />
+        </div>
 
-  {/* Day Filter */}
-  <div className="flex flex-col">
-    <label className="mb-1 text-sm font-semibold text-gray-700">Select Day:</label>
-    <select
-      value={selectedDay}
-      onChange={(e) => setSelectedDay(e.target.value)}
-      className="border rounded-lg px-4 py-2 text-gray-700 shadow-sm"
-    >
-      {days.map((day) => (
-        <option key={day} value={day}>{day}</option>
-      ))}
-    </select>
-  </div>
+        {/* Day Filter */}
+        <div className="flex flex-col">
+          <label className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300">Select Day:</label>
+          <select
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+            className="border rounded-lg px-4 py-2 text-gray-800 dark:text-white dark:bg-gray-900 dark:border-gray-700"
+          >
+            {days.map((day) => (
+              <option key={day} value={day}>
+                {day}
+              </option>
+            ))}
+          </select>
+        </div>
 
-  {/* Marks Filter */}
-  <div className="flex flex-col">
-    <label className="mb-1 text-sm font-semibold text-gray-700">Filter by Marks:</label>
-    <select
-      value={selectedMarksFilter}
-      onChange={(e) => setSelectedMarksFilter(e.target.value)}
-      className="border rounded-lg px-4 py-2 text-gray-700 shadow-sm"
-    >
-      <option value="All">All</option>
-      <option value="Not uploaded">Not uploaded</option>
-      <option value="Not Evaluated">Not Evaluated</option>
-      <option value="Evaluated">Evaluated</option>
-    </select>
-  </div>
+        {/* Marks Filter */}
+        <div className="flex flex-col">
+          <label className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300">Filter by Marks:</label>
+          <select
+            value={selectedMarksFilter}
+            onChange={(e) => setSelectedMarksFilter(e.target.value)}
+            className="border rounded-lg px-4 py-2 text-gray-800 dark:text-white dark:bg-gray-900 dark:border-gray-700"
+          >
+            <option value="All">All</option>
+            <option value="Not uploaded">Not uploaded</option>
+            <option value="Not Evaluated">Not Evaluated</option>
+            <option value="Evaluated">Evaluated</option>
+          </select>
+        </div>
 
-  {/* Module Filter */}
-  <div className="flex flex-col">
-    <label className="mb-1 text-sm font-semibold text-gray-700">Filter Module:</label>
-    <select
-      value={selectedModule}
-      onChange={(e) => setSelectedModule(e.target.value)}
-      className="border rounded-lg px-4 py-2 text-gray-700 shadow-sm"
-    >
-      {moduleOptions.map((module) => (
-        <option key={module} value={module}>{module}</option>
-      ))}
-    </select>
-  </div>
-</div>
+        {/* Module Filter */}
+        <div className="flex flex-col">
+          <label className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300">Filter Module:</label>
+          <select
+            value={selectedModule}
+            onChange={(e) => setSelectedModule(e.target.value)}
+            className="border rounded-lg px-4 py-2 text-gray-800 dark:text-white dark:bg-gray-900 dark:border-gray-700"
+          >
+            {moduleOptions.map((module) => (
+              <option key={module} value={module}>
+                {module}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Legend */}
-<div className="text-sm text-gray-600 text-center mb-4">
-  <span className="font-semibold">Note:</span> 
-  <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-semibold mx-2">NU</span> = Not Uploaded,&nbsp;
-  <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs font-semibold mx-2">NE</span> = Not Evaluated
-</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
+        <span className="font-semibold">Note:</span>
+        <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-0.5 rounded text-xs font-semibold mx-2">NU</span> = Not Uploaded,
+        <span className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 px-2 py-0.5 rounded text-xs font-semibold mx-2">NE</span> = Not Evaluated
+      </div>
 
-
-{/* Table */}
-<div className="overflow-x-auto">
-  <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-    <table className="min-w-full text-sm text-gray-700">
-      <thead className="bg-black text-white">
-        <tr>
-          <th className="p-4 text-left font-semibold">Student Name</th>
-          <th className="p-4 text-left font-semibold">Module</th>
-          <th className="p-4 text-left font-semibold">Day</th>
-          <th className="p-4 text-left font-semibold">Quiz</th>
-          <th className="p-4 text-left font-semibold">Coding</th>
-          <th className="p-4 text-left font-semibold">Assignment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filtered.length > 0 ? (
-          filtered.map((s, idx) => {
-            const studentName = s.student?.user?.name || "Unknown";
-            const renderBadge = (val) => {
-  if (val === -1) {
-    return <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-semibold">NE</span>;
-  }
-  if (val === -2) {
-    return <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-xs font-semibold">NU</span>;
-  }
-  return <span className="text-sm font-semibold">{val}</span>;
-};
-            
-            return (
-              <tr
-                key={idx}
-                className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50 transition`}
-              >
-                <td className="p-4 font-medium">{studentName}</td>
-                <td className="p-4 font-semibold">{s.module}</td>
-                <td className="p-4">{`Day ${s.day}`}</td>
-                <td className="p-4">{renderBadge(s.marksObtained?.[0] ?? 0)}</td>
-<td className="p-4">{renderBadge(s.marksObtained?.[1] ?? 0)}</td>
-<td className="p-4">{renderBadge(s.marksObtained?.[2] ?? 0)}</td>
-
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+          <table className="min-w-full text-sm text-gray-800 dark:text-gray-200">
+            <thead className="bg-black text-white">
+              <tr>
+                <th className="p-4 text-left font-semibold">Student Name</th>
+                <th className="p-4 text-left font-semibold">Module</th>
+                <th className="p-4 text-left font-semibold">Day</th>
+                <th className="p-4 text-left font-semibold">Quiz</th>
+                <th className="p-4 text-left font-semibold">Coding</th>
+                <th className="p-4 text-left font-semibold">Assignment</th>
               </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td colSpan="6" className="text-center py-6 text-gray-500">
-              No matching records found.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
+            </thead>
+            <tbody>
+              {filtered.length > 0 ? (
+                filtered.map((s, idx) => {
+                  const studentName = s.student?.user?.name || "Unknown";
+                  const renderBadge = (val) => {
+                    if (val === -1) {
+                      return (
+                        <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-0.5 rounded text-xs font-semibold">NE</span>
+                      );
+                    }
+                    if (val === -2) {
+                      return (
+                        <span className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 px-2 py-0.5 rounded text-xs font-semibold">NU</span>
+                      );
+                    }
+                    return <span className="text-sm font-semibold">{val}</span>;
+                  };
 
+                  return (
+                    <tr
+                      key={idx}
+                      className={`${
+                        idx % 2 === 0
+                          ? "bg-gray-50 dark:bg-gray-800"
+                          : "bg-white dark:bg-gray-900"
+                      } hover:bg-blue-50 dark:hover:bg-gray-700 transition`}
+                    >
+                      <td className="p-4 font-medium">{studentName}</td>
+                      <td className="p-4 font-semibold">{s.module}</td>
+                      <td className="p-4">{`Day ${s.day}`}</td>
+                      <td className="p-4">{renderBadge(s.marksObtained?.[0] ?? 0)}</td>
+                      <td className="p-4">{renderBadge(s.marksObtained?.[1] ?? 0)}</td>
+                      <td className="p-4">{renderBadge(s.marksObtained?.[2] ?? 0)}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center py-6 text-gray-500 dark:text-gray-400">
+                    No matching records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

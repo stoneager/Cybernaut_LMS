@@ -19,17 +19,14 @@ export default function StudentList() {
 
   const token = localStorage.getItem("token");
 
-  // Helper function to get full course name from batch name
   const getCourseName = (batchName) => {
     if (!batchName) return "N/A";
-    
     const courseMap = {
-      "FS": "Full Stack Development",
-      "DS": "Data Science", 
-      "DA": "Data Analytics",
-      "TT": "Tech Trio"
+      FS: "Full Stack Development",
+      DS: "Data Science",
+      DA: "Data Analytics",
+      TT: "Tech Trio",
     };
-    
     const parts = batchName.split("-");
     const courseCode = parts[0];
     return courseMap[courseCode] || courseCode;
@@ -49,7 +46,7 @@ export default function StudentList() {
           course: selectedCourse,
           year: selectedYear,
         },
-        withCredentials: true
+        withCredentials: true,
       });
 
       const studentsData = res.data.students || [];
@@ -58,15 +55,14 @@ export default function StudentList() {
       setStudents(studentsData);
       setBatchOptions(batches);
 
-      // Derive course and year from batchName
       const courseSet = new Set();
       const yearSet = new Set();
 
-      batches.forEach(batch => {
+      batches.forEach((batch) => {
         const parts = batch.batchName.split("-");
         if (parts.length >= 2) {
           courseSet.add(parts[0]);
-          yearSet.add(parts[1].slice(3)); // Extract "25" from "JUL25"
+          yearSet.add(parts[1].slice(3)); // "JUL25" → "25"
         }
       });
 
@@ -88,36 +84,39 @@ export default function StudentList() {
 
   useEffect(() => {
     if (leaderboardModule && leaderboardBatchId) {
-      axios.get("http://localhost:5002/statistics/leaderboard", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { module: leaderboardModule, batchId: leaderboardBatchId },
-        withCredentials: true
-      }).then(res => {
-        setLeaderboard(res.data);
-      }).catch(err => {
-        console.error("Leaderboard fetch error:", err);
-      });
+      axios
+        .get("http://localhost:5002/statistics/leaderboard", {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { module: leaderboardModule, batchId: leaderboardBatchId },
+          withCredentials: true,
+        })
+        .then((res) => {
+          setLeaderboard(res.data);
+        })
+        .catch((err) => {
+          console.error("Leaderboard fetch error:", err);
+        });
     }
   }, [leaderboardModule, leaderboardBatchId]);
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-white dark:bg-black text-gray-800 dark:text-white min-h-screen transition-all">
       <AdminLeaderboard />
       <div>
-        <h2 className="text-2xl font-bold mb-6 text-blue-900">My Students</h2>
+        <h2 className="text-2xl font-bold mb-6 text-blue-900 dark:text-white">My Students</h2>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <input
             type="text"
             placeholder="Search by student name..."
-            className="border px-4 py-2 rounded w-full shadow-sm"
+            className="border px-4 py-2 rounded w-full shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
           <select
-            className="border px-4 py-2 rounded w-full shadow-sm"
+            className="border px-4 py-2 rounded w-full shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             value={selectedCourse}
             onChange={(e) =>
               setSelectedCourse(e.target.value === "All Courses" ? "" : e.target.value)
@@ -131,7 +130,7 @@ export default function StudentList() {
           </select>
 
           <select
-            className="border px-4 py-2 rounded w-full shadow-sm"
+            className="border px-4 py-2 rounded w-full shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             value={selectedBatch}
             onChange={(e) => setSelectedBatch(e.target.value)}
           >
@@ -144,11 +143,9 @@ export default function StudentList() {
           </select>
 
           <select
-            className="border px-4 py-2 rounded w-full shadow-sm"
+            className="border px-4 py-2 rounded w-full shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             value={selectedYear}
-            onChange={(e) =>
-              setSelectedYear(e.target.value === "All Years" ? "" : e.target.value)
-            }
+            onChange={(e) => setSelectedYear(e.target.value === "All Years" ? "" : e.target.value)}
           >
             {yearOptions.map((year) => (
               <option key={year} value={year}>
@@ -160,12 +157,12 @@ export default function StudentList() {
 
         {/* Student Table */}
         {students.length === 0 ? (
-          <p className="text-gray-600 text-center mt-8">No students found.</p>
+          <p className="text-gray-600 dark:text-gray-400 text-center mt-8">No students found.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg shadow">
-            <table className="min-w-full bg-white">
+            <table className="min-w-full bg-white dark:bg-gray-900">
               <thead>
-                <tr className="bg-blue-100 text-blue-900 text-left text-sm">
+                <tr className="bg-blue-100 dark:bg-gray-800 text-blue-900 dark:text-gray-200 text-left text-sm">
                   <th className="py-3 px-4">Name</th>
                   <th className="py-3 px-4">Email</th>
                   <th className="py-3 px-4">Phone</th>
@@ -175,7 +172,10 @@ export default function StudentList() {
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student._id} className="border-t hover:bg-gray-50 text-sm">
+                  <tr
+                    key={student._id}
+                    className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                  >
                     <td className="py-2 px-4">{student.name}</td>
                     <td className="py-2 px-4">{student.email}</td>
                     <td className="py-2 px-4">{student.phone}</td>

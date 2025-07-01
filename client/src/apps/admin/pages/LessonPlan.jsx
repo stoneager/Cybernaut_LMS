@@ -1,11 +1,9 @@
-// LessonPlan.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaPlus, FaEdit, FaFlask, FaLink, FaFilePdf } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 
 export default function LessonPlan() {
   const { batchId } = useParams();
@@ -133,16 +131,15 @@ export default function LessonPlan() {
       setShowModal(false);
       fetchNotes();
     } catch (e) {
-  console.error(e);
-  if (e.response?.data?.error?.includes("already exists")) {
-    toast.error(`Day ${form.day} already exists for this batch`, {
-      position: "top-right",
-    });
-  } else {
-    toast.error(e.response?.data?.error || 'Error saving note');
-  }
-}
-
+      console.error(e);
+      if (e.response?.data?.error?.includes("already exists")) {
+        toast.error(`Day ${form.day} already exists for this batch`, {
+          position: "top-right",
+        });
+      } else {
+        toast.error(e.response?.data?.error || 'Error saving note');
+      }
+    }
   };
 
   const handleEvaluate = async (studentId, marks, setMarks) => {
@@ -166,7 +163,7 @@ export default function LessonPlan() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className=" mx-auto p-6 text-gray-900 dark:text-white bg-white dark:bg-black w-full min-h-screen">
       {/* Module switch buttons */}
 {modules.length > 1 && (
   <div className="flex gap-3 mb-6">
@@ -186,7 +183,7 @@ export default function LessonPlan() {
 
 {/* Page heading and Add Note button */}
 <div className="flex justify-between items-center mb-10">
-  <h2 className="text-2xl font-bold text-gray-900">
+  <h2 className="text-2xl font-bold text-gray-900 dark: text-white">
     Lesson Plan: <span className="text-blue-600">{batchDetails.batchName}</span> <span className="text-gray-500 text-base">({batchDetails.courseName})</span> – <span className="text-indigo-600">{selectedModule}</span>
   </h2>
   <button
@@ -288,8 +285,8 @@ export default function LessonPlan() {
       
       {/* Evaluation Modal */}
       {showEvalModal && evalData && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-8 relative">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50 dark:bg-blue text-white">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-8 relative dark:bg-black">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
               onClick={() => setShowEvalModal(false)}
@@ -359,7 +356,7 @@ function EvaluationTable({ submissions, handleEvaluate }) {
             <td className="p-3 border text-center">
               <a href={sub.answerLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View PDF</a>
             </td>
-            <td className="p-3 border text-center">
+            <td className="p-3 border text-center dark:text-black">
               <input
                 type="number"
                 min={0}
