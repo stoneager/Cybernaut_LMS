@@ -177,7 +177,8 @@ else {
 
       {quizModalOpen && selectedNote && quizzes[selectedNote] && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 relative">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6 relative">
+
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
               onClick={closeModal}

@@ -6,7 +6,8 @@ import StudentBatch from './pages/StudentBatch';
 import Sidebar from './components/Sidebar';
 import { ToastContainer } from 'react-toastify';
 import Settings from './pages/Settings';
-
+import AttemptQuiz from './pages/AttemptQuiz';
+import ReportList from './pages/ReportList';
 function AppRoutes() {
   return (
     <>
@@ -66,6 +67,27 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/quiz/attempt/:noteId"
+          element={
+            <PrivateRoute>
+              <AttemptQuiz />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <Sidebar pageTitle="QuizReports">
+              <ReportList />
+              </Sidebar>
+            </PrivateRoute>
+          }
+        />
+
       </Routes>
     </>
   );
