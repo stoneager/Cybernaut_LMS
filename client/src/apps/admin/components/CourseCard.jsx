@@ -10,7 +10,7 @@ export default function CourseCard({ image, name, startDate, batch, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-md overflow-hidden w-80
+      className="bg-blue rounded-2xl shadow-md overflow-hidden w-80
       transform transition-all duration-300
       hover:-translate-y-1 hover:shadow-lg cursor-pointer"
     >
@@ -21,12 +21,12 @@ export default function CourseCard({ image, name, startDate, batch, onClick }) {
       />
 
       <div className="p-4 space-y-2">
-        <div className="flex justify-between text-gray-600">
-          <h2 className="text-xl font-semibold text-gray-800">{name}</h2>
+        <div className="flex justify-between text-white-600">
+          <h2 className="text-xl font-semibold text-white-800">{name}</h2>
           <span>{year}</span>
         </div>
 
-        <div className="flex justify-between text-gray-600">
+        <div className="flex justify-between text-white-600">
           <span>{month}</span>
           <span>Batch: {batch}</span>
         </div>

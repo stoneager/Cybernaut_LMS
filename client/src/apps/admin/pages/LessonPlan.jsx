@@ -195,7 +195,8 @@ export default function LessonPlan() {
 
 {/* Latest note display */}
 {notes.length > 0 && (
-  <div className="bg-white shadow-sm border rounded-xl p-6 mb-8">
+  <div className="bg-white dark:bg-blue-900 shadow-sm border dark:border-blue-700 rounded-xl p-6 mb-8">
+
     <div className="flex justify-between items-center">
       <h3 className="text-lg font-semibold text-gray-800">Day {notes[0].day}: {notes[0].title}</h3>
       <a
@@ -239,11 +240,12 @@ export default function LessonPlan() {
 )}
 
 {/* Older notes display */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
   {notes.slice(1).map(note => (
     <div
-      key={note._id}
-      className="bg-white p-5 rounded-lg border hover:shadow-sm cursor-pointer"
+  key={note._id}
+  className="bg-white dark:bg-blue-900 p-5 rounded-lg border dark:border-blue-700 hover:shadow-sm cursor-pointer"
+
       onClick={() => setNotes(prev => {
         const updated = [...prev];
         const idx = updated.findIndex(n => n._id === note._id);
@@ -304,7 +306,7 @@ export default function LessonPlan() {
 
       {/* Add/Edit Note Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+        <div className="fixed inset-0 bg-black text-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-8 relative">
             <button
               className="absolute top-4 right-4 text-gray-600 hover:text-black text-xl"
