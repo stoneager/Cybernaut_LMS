@@ -43,9 +43,9 @@ export default function AdminHome() {
   </h1>
 
   {batches.length === 0 ? (
-    <p className="text-gray-500 text-lg">No courses assigned to you yet.</p>
+    <p className="text-gray-500 dark:text-blue text-lg">No courses assigned to you yet.</p>
   ) : (
-    <div className="flex flex-wrap gap-6 overflow-y-auto max-h-[70vh] pr-2 py-10">
+    <div className="flex flex-wrap gap-6 overflow-y-auto max-h-[70vh] pr-2 py-10 ">
       {batches.map((batch, idx) => {
         const course = batch.course;
         return (
